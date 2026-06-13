@@ -1,10 +1,15 @@
 package com.klikkas.controller;
 
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.UUID;
+
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import com.klikkas.dto.users.UserListResponse;
+import com.klikkas.dto.users.UserResponse;
 import com.klikkas.service.UserService;
 
 @RestController
@@ -20,8 +25,8 @@ public class UserController {
     public UserListResponse getUsers(
         @RequestParam(defaultValue = "1") Integer page,
         @RequestParam(defaultValue = "10") Integer limit,
-        @RequestParam(required = false) String order,
-        @RequestParam(defaultValue = "asc") String dir
+        @RequestParam(required = false, defaultValue = "created_at") String order,
+        @RequestParam(defaultValue = "desc") String dir
     ) {
         return userService.getUsers(
             page,
@@ -29,6 +34,13 @@ public class UserController {
             order,
             dir
         );
-    } 
+    }
+
+    @GetMapping("/users/{id}")
+    public UserResponse getUser(
+        @PathVariable UUID id
+    ) {
+        return userService.getUser(id);
+    }
     
 }

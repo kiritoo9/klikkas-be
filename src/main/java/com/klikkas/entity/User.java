@@ -2,6 +2,7 @@ package com.klikkas.entity;
 
 import jakarta.persistence.*;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
@@ -17,6 +18,10 @@ public class User {
     private String phone;
     private String address;
     private String remark;
+
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+    private LocalDateTime deletedAt;
 
 
     public UUID getId() {
@@ -45,6 +50,21 @@ public class User {
 
     public String getRemark() {
         return remark;
+    }
+
+    @Column(name = "created_at")
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    @Column(name = "updated_at")
+    public LocalDateTime getUpdatedAt() {
+        return createdAt;
+    }
+
+    @Column(name = "deleted_at")
+    public LocalDateTime getDeletedAt() {
+        return createdAt;
     }
 
 }
