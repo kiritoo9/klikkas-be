@@ -7,6 +7,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.klikkas.exception.BadRequestException;
@@ -21,10 +22,15 @@ import com.klikkas.repository.UserRepository;
 @Service
 public class UserService {
 
+    private final PasswordEncoder passwordEncoder;
     public final UserRepository userRepository;
 
-    public UserService(UserRepository userRepository) {
+    public UserService(
+        UserRepository userRepository, 
+        PasswordEncoder passwordEncoder
+    ) {
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
     }
     
     public UserListResponse getUsers(
@@ -93,8 +99,12 @@ public class UserService {
 
         User user = new User();
         user.setEmail(request.email());
-        user.setPassword(request.password());
         user.setFullname(request.fullname());
+
+        // encrypt password
+        user.setPassword(
+            passwordEncoder.encode(request.password())
+        );
 
         user.setPhone(request.phone());
         user.setAddress(request.address());
