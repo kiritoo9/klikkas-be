@@ -9,10 +9,13 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import com.klikkas.exception.BadRequestException;
+import com.klikkas.exception.NotFoundException;
+
+import com.klikkas.entity.User;
+import com.klikkas.dto.users.CreateUserRequest;
 import com.klikkas.dto.users.UserListResponse;
 import com.klikkas.dto.users.UserResponse;
-import com.klikkas.entity.User;
-import com.klikkas.exception.NotFoundException;
 import com.klikkas.repository.UserRepository;
 
 @Service
@@ -80,6 +83,33 @@ public class UserService {
             user.getAddress(),
             user.getRemark(),
             user.getCreatedAt()
+        );
+    }
+
+    public UserResponse createUser(CreateUserRequest request) {
+        if (userRepository.existsByEmailAndDeletedAtIsNull(request.email())) {
+            throw new BadRequestException("Email already exists");
+        }
+
+        User user = new User();
+        user.setEmail(request.email());
+        user.setPassword(request.password());
+        user.setFullname(request.fullname());
+
+        user.setPhone(request.phone());
+        user.setAddress(request.address());
+        user.setRemark(request.remark());
+
+        User saved = userRepository.save(user);
+
+        return new UserResponse(
+            saved.getId(),
+            saved.getEmail(),
+            saved.getFullname(),
+            saved.getPhone(),
+            saved.getAddress(),
+            saved.getRemark(),
+            saved.getCreatedAt()
         );
     }
 

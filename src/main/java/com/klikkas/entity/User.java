@@ -1,15 +1,22 @@
 package com.klikkas.entity;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+import org.hibernate.annotations.CreationTimestamp;
+
 @Entity
 @Table(name = "users")
+@Setter
+@Getter
 public class User {
     
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
     private String email;
@@ -19,8 +26,13 @@ public class User {
     private String address;
     private String remark;
 
+    @CreationTimestamp
+    @Column(updatable = false)
     private LocalDateTime createdAt;
+
+    @CreationTimestamp
     private LocalDateTime updatedAt;
+    
     private LocalDateTime deletedAt;
 
 
@@ -59,12 +71,12 @@ public class User {
 
     @Column(name = "updated_at")
     public LocalDateTime getUpdatedAt() {
-        return createdAt;
+        return updatedAt;
     }
 
     @Column(name = "deleted_at")
     public LocalDateTime getDeletedAt() {
-        return createdAt;
+        return deletedAt;
     }
 
 }

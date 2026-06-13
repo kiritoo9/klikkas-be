@@ -15,4 +15,13 @@ public interface UserRepository
     Page<User> findByDeletedAtIsNull(Pageable pageable);
 
     Optional<User> findByIdAndDeletedAtIsNull(UUID id);
+
+    User findByEmailAndDeletedAtIsNull(
+            String email);
+
+    boolean existsByEmailAndDeletedAtIsNull(
+            String email);
+
+    boolean existsByEmail(
+            String email);
 }
