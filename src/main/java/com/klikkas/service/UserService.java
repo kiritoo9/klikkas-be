@@ -66,7 +66,10 @@ public class UserService {
         User user = userRepository
             .findByIdAndDeletedAtIsNull(id)
             .orElseThrow(() -> 
-                new NotFoundException("User not found")
+                new NotFoundException(
+                    "User not found",
+                    "USER_NOT_FOUND"
+                )
             );
 
         return new UserResponse(
