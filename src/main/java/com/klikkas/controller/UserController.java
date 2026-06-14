@@ -18,20 +18,17 @@ import com.klikkas.dto.users.UserResponse;
 import com.klikkas.service.UserService;
 
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.PutMapping;
 
-
 @RestController
+@RequiredArgsConstructor
 public class UserController {
 
     public final UserService userService;
-
-    public UserController(UserService userService) {
-        this.userService = userService;
-    }
 
     @GetMapping("/users")
     public UserListResponse getUsers(
@@ -62,17 +59,15 @@ public class UserController {
 
     @PutMapping("/users/{id}")
     public ResponseEntity<Void> updateUser(
-        @PathVariable UUID id, 
-        @Valid @RequestBody UpdateUserRequest request
-    ) {
+            @PathVariable UUID id,
+            @Valid @RequestBody UpdateUserRequest request) {
         userService.updateUser(id, request);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 
     @DeleteMapping("/users/{id}")
     public ResponseEntity<Void> deleteUser(
-        @PathVariable UUID id
-    ) {
+            @PathVariable UUID id) {
         userService.deleteUser(id);
 
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();

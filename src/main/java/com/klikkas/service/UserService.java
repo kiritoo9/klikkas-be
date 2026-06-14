@@ -21,33 +21,26 @@ import com.klikkas.dto.users.UserListResponse;
 import com.klikkas.dto.users.UserResponse;
 import com.klikkas.repository.UserRepository;
 
+import lombok.RequiredArgsConstructor;
+
 @Service
+@RequiredArgsConstructor
 public class UserService {
 
     private final PasswordEncoder passwordEncoder;
     public final UserRepository userRepository;
 
-    public UserService(
-        UserRepository userRepository, 
-        PasswordEncoder passwordEncoder
-    ) {
-        this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
-    }
-    
     public UserListResponse getUsers(
-        Integer page,
-        Integer limit,
-        String order,
-        String dir
-    ) {
+            Integer page,
+            Integer limit,
+            String order,
+            String dir) {
         // preparing pageable parameters
         Pageable pageable;
         if (order != null && !order.isBlank()) {
             Sort sort = dir.equalsIgnoreCase("desc")
-                ? Sort.by(order).descending()
-                : Sort.by(order).ascending();
-
+                    ? Sort.by(order).descending()
+                    : Sort.by(order).ascending();
 
             pageable = PageRequest.of(page - 1, limit, sort);
         } else {
@@ -57,41 +50,35 @@ public class UserService {
         // perform query
         Page<User> result = userRepository.findByDeletedAtIsNull(pageable);
         List<UserResponse> users = result.getContent().stream().map(user -> new UserResponse(
-            user.getId(),
-            user.getEmail(),
-            user.getFullname(),
-            user.getPhone(),
-            user.getAddress(),
-            user.getRemark(),
-            user.getCreatedAt()
-        )).toList();
+                user.getId(),
+                user.getEmail(),
+                user.getFullname(),
+                user.getPhone(),
+                user.getAddress(),
+                user.getRemark(),
+                user.getCreatedAt())).toList();
 
         return new UserListResponse(
-            users,
-            page,
-            result.getTotalPages()
-        );
+                users,
+                page,
+                result.getTotalPages());
     }
 
     public UserResponse getUser(UUID id) {
         User user = userRepository
-            .findByIdAndDeletedAtIsNull(id)
-            .orElseThrow(() -> 
-                new NotFoundException(
-                    "Data not found",
-                    "DATA_NOT_FOUND"
-                )
-            );
+                .findByIdAndDeletedAtIsNull(id)
+                .orElseThrow(() -> new NotFoundException(
+                        "Data not found",
+                        "DATA_NOT_FOUND"));
 
         return new UserResponse(
-            user.getId(),
-            user.getEmail(),
-            user.getFullname(),
-            user.getPhone(),
-            user.getAddress(),
-            user.getRemark(),
-            user.getCreatedAt()
-        );
+                user.getId(),
+                user.getEmail(),
+                user.getFullname(),
+                user.getPhone(),
+                user.getAddress(),
+                user.getRemark(),
+                user.getCreatedAt());
     }
 
     public UserResponse createUser(CreateUserRequest request) {
@@ -105,8 +92,7 @@ public class UserService {
 
         // encrypt password
         user.setPassword(
-            passwordEncoder.encode(request.password())
-        );
+                passwordEncoder.encode(request.password()));
 
         user.setPhone(request.phone());
         user.setAddress(request.address());
@@ -115,22 +101,20 @@ public class UserService {
         User saved = userRepository.save(user);
 
         return new UserResponse(
-            saved.getId(),
-            saved.getEmail(),
-            saved.getFullname(),
-            saved.getPhone(),
-            saved.getAddress(),
-            saved.getRemark(),
-            saved.getCreatedAt()
-        );
+                saved.getId(),
+                saved.getEmail(),
+                saved.getFullname(),
+                saved.getPhone(),
+                saved.getAddress(),
+                saved.getRemark(),
+                saved.getCreatedAt());
     }
 
     public void updateUser(UUID id, UpdateUserRequest request) {
         User user = userRepository.findByIdAndDeletedAtIsNull(id)
-            .orElseThrow(() -> new NotFoundException(
-                "Data not found",
-                "DATA_NOT_FOUND"
-            ));
+                .orElseThrow(() -> new NotFoundException(
+                        "Data not found",
+                        "DATA_NOT_FOUND"));
 
         if (userRepository.existsByEmailAndIdNot(request.email(), id)) {
             throw new BadRequestException("Email is already exists");
@@ -150,10 +134,9 @@ public class UserService {
 
     public void deleteUser(UUID id) {
         User user = userRepository.findByIdAndDeletedAtIsNull(id)
-            .orElseThrow(() -> new NotFoundException(
-                "Data not found",
-                "DATA_NOT_FOUND"
-            ));
+                .orElseThrow(() -> new NotFoundException(
+                        "Data not found",
+                        "DATA_NOT_FOUND"));
 
         user.setDeletedAt(LocalDateTime.now());
         userRepository.save(user);

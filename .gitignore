@@ -31,3 +31,6 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# private enviroment
+SET_ENV.sh

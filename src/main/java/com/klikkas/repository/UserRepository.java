@@ -16,7 +16,7 @@ public interface UserRepository
 
     Optional<User> findByIdAndDeletedAtIsNull(UUID id);
 
-    User findByEmailAndDeletedAtIsNull(
+    Optional<User> findByEmailAndDeletedAtIsNull(
             String email);
 
     boolean existsByEmailAndDeletedAtIsNull(
