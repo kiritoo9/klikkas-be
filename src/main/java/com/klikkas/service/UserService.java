@@ -1,5 +1,6 @@
 package com.klikkas.service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -15,6 +16,7 @@ import com.klikkas.exception.NotFoundException;
 
 import com.klikkas.entity.User;
 import com.klikkas.dto.users.CreateUserRequest;
+import com.klikkas.dto.users.UpdateUserRequest;
 import com.klikkas.dto.users.UserListResponse;
 import com.klikkas.dto.users.UserResponse;
 import com.klikkas.repository.UserRepository;
@@ -76,8 +78,8 @@ public class UserService {
             .findByIdAndDeletedAtIsNull(id)
             .orElseThrow(() -> 
                 new NotFoundException(
-                    "User not found",
-                    "USER_NOT_FOUND"
+                    "Data not found",
+                    "DATA_NOT_FOUND"
                 )
             );
 
@@ -121,6 +123,40 @@ public class UserService {
             saved.getRemark(),
             saved.getCreatedAt()
         );
+    }
+
+    public void updateUser(UUID id, UpdateUserRequest request) {
+        User user = userRepository.findByIdAndDeletedAtIsNull(id)
+            .orElseThrow(() -> new NotFoundException(
+                "Data not found",
+                "DATA_NOT_FOUND"
+            ));
+
+        if (userRepository.existsByEmailAndIdNot(request.email(), id)) {
+            throw new BadRequestException("Email is already exists");
+        }
+
+        // updating data
+        user.setFullname(request.fullname());
+        user.setPhone(request.phone());
+        user.setAddress(request.address());
+        user.setRemark(request.remark());
+
+        if (request.password() != null && !request.password().isBlank()) {
+            user.setPassword(passwordEncoder.encode(request.password()));
+        }
+        userRepository.save(user);
+    }
+
+    public void deleteUser(UUID id) {
+        User user = userRepository.findByIdAndDeletedAtIsNull(id)
+            .orElseThrow(() -> new NotFoundException(
+                "Data not found",
+                "DATA_NOT_FOUND"
+            ));
+
+        user.setDeletedAt(LocalDateTime.now());
+        userRepository.save(user);
     }
 
 }

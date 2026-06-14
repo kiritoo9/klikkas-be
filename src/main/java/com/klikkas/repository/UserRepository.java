@@ -24,4 +24,10 @@ public interface UserRepository
 
     boolean existsByEmail(
             String email);
+
+    boolean existsByEmailAndIdNot(
+                String email,
+                UUID id);
+
+    boolean existsByIdAndDeletedAtIsNull(UUID id);
 }
