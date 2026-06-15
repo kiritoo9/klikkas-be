@@ -5,7 +5,6 @@ import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -13,7 +12,6 @@ import com.klikkas.dto.ErrorResponse;
 
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
-import io.github.bucket4j.Refill;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -30,12 +28,13 @@ public class RateLimiterFilter extends OncePerRequestFilter {
     private final Map<String, Bucket> buckets = new ConcurrentHashMap<>();
 
     private Bucket resolveBucket(String ip) {
+        Bandwidth limit = Bandwidth.builder()
+                .capacity(5)
+                .refillGreedy(5, Duration.ofMinutes(5))
+                .build();
+
         return buckets.computeIfAbsent(ip, key -> Bucket.builder()
-                .addLimit(Bandwidth.classic(
-                        5,
-                        Refill.greedy(
-                                5,
-                                Duration.ofMinutes(1))))
+                .addLimit(limit)
                 .build());
     }
 
