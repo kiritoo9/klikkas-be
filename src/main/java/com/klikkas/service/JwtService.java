@@ -31,9 +31,10 @@ public class JwtService {
         return Jwts.builder()
             .subject(user.getEmail())
             .claim("id", user.getId())
+            .claim("role", user.getRole() != null ? user.getRole().getName() : null)
             .issuedAt(new Date())
             .expiration(
-                new Date(System.currentTimeMillis() * 86400000 * expiration)
+                new Date(System.currentTimeMillis() + (86400000L * expiration))
             )
             .signWith(key)
             .compact();
@@ -71,7 +72,16 @@ public class JwtService {
     }
 
     public String extractRole(String token) {
-        return "ROLE_ADMIN";
+        SecretKey key = Keys.hmacShaKeyFor(
+            secret.getBytes(StandardCharsets.UTF_8)
+        );
+
+        return Jwts.parser()
+            .verifyWith(key)
+            .build()
+            .parseSignedClaims(token)
+            .getPayload()
+            .get("role", String.class);
     }
 
 }

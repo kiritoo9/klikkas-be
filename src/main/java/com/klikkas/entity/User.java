@@ -15,10 +15,14 @@ import org.hibernate.annotations.UpdateTimestamp;
 @Setter
 @Getter
 public class User {
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "role_id")
+    private Role role;
 
     private String email;
     private String password;
@@ -33,12 +37,15 @@ public class User {
 
     @UpdateTimestamp
     private LocalDateTime updatedAt;
-    
-    private LocalDateTime deletedAt;
 
+    private LocalDateTime deletedAt;
 
     public UUID getId() {
         return id;
+    }
+
+    public Role getRole() {
+        return role;
     }
 
     public String getEmail() {
