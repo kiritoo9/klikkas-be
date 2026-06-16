@@ -12,5 +12,5 @@ public record UserResponse(
     String phone,
     String address,
     String remark,
-    LocalDateTime createdAt
+    LocalDateTime created_at
 ) {}

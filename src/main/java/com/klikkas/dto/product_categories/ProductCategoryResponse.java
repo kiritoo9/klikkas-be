@@ -7,5 +7,5 @@ public record ProductCategoryResponse (
     UUID id,
     String name,
     String description,
-    LocalDateTime createdAt
+    LocalDateTime created_at
 ) {}
