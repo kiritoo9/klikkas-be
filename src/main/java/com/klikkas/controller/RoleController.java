@@ -20,7 +20,7 @@ public class RoleController {
     public RoleListResponse getRoles(
             @RequestParam(defaultValue = "1") Integer page,
             @RequestParam(defaultValue = "10") Integer limit,
-            @RequestParam(required = false, defaultValue = "created_at") String order,
+            @RequestParam(required = false, defaultValue = "createdAt") String order,
             @RequestParam(defaultValue = "desc") String dir,
             @RequestParam(required = false) String keywords) {
         return roleService.getRoles(page, limit, order, dir, keywords);
