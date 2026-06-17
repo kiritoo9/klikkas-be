@@ -2,6 +2,7 @@ package com.klikkas.service;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.UUID;
 
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
@@ -39,6 +40,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             String email = jwtService.extractEmail(token);
             String role = jwtService.extractRole(token);
+            UUID tenantID = jwtService.extractTenantID(token);
+            System.out.println("TenantID: " + tenantID);
 
             List<GrantedAuthority> authorization = List.of(
                     new SimpleGrantedAuthority(role));

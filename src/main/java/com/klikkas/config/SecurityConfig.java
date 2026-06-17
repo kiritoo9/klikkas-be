@@ -20,7 +20,8 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtFilter;
     private static final String[] EXCLUDED_PATHS = {
             "/healthcheck",
-            "/login"
+            "/login",
+            "/registration"
     };
 
     @Bean

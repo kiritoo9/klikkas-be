@@ -1,6 +1,33 @@
 -- Tables with no dependencies
+create table roles (
+    id uuid primary key,
+    name varchar(50),
+    description text,
+
+    created_at timestamp,
+    updated_at timestamp default null,
+    deleted_at timestamp default null
+);
+
+create table tenants (
+    id uuid primary key,
+    code varchar(50) unique,
+
+    name varchar(150),
+    description text,
+    remark text,
+    is_active boolean default false,
+
+    created_at timestamp,
+    updated_at timestamp default null,
+    deleted_at timestamp default null
+);
+
+-- Depends on tenants
 create table order_categories (
     id uuid primary key,
+    tenant_id uuid,
+
     name varchar(150),
     description text,
     category_type varchar(50) check (
@@ -10,28 +37,24 @@ create table order_categories (
 
     created_at timestamp,
     updated_at timestamp default null,
-    deleted_at timestamp default null
+    deleted_at timestamp default null,
+
+    foreign key (tenant_id) references tenants(id) on delete cascade
 );
 
 create table product_categories (
     id uuid primary key,
+    tenant_id uuid,
+
     name varchar(150),
     description text,
     is_active boolean default false,
 
     created_at timestamp,
     updated_at timestamp default null,
-    deleted_at timestamp default null
-);
+    deleted_at timestamp default null,
 
-create table roles (
-    id uuid primary key,
-    name varchar(50),
-    description text,
-
-    created_at timestamp,
-    updated_at timestamp default null,
-    deleted_at timestamp default null
+    foreign key (tenant_id) references tenants(id) on delete cascade
 );
 
 -- Depends on roles
@@ -47,6 +70,8 @@ create table users (
     address text,
     remark text,
 
+    google_id text,
+
     created_at timestamp,
     updated_at timestamp default null,
     deleted_at timestamp default null,
@@ -54,10 +79,27 @@ create table users (
     foreign key (role_id) references roles(id) on delete cascade
 );
 
+-- Depends on users and tenants
+create table user_tenants (
+    id uuid primary key,
+    user_id uuid,
+    tenant_id uuid,
+
+    remark text,
+
+    created_at timestamp,
+    updated_at timestamp default null,
+    deleted_at timestamp default null,
+
+    foreign key (user_id) references users(id) on delete cascade,
+    foreign key (tenant_id) references tenants(id) on delete cascade
+);
+
 -- Depends on product_categories
 create table products (
     id uuid primary key,
     category_id uuid,
+    tenant_id uuid,
 
     sku varchar(150),
     name varchar(150),
@@ -75,13 +117,15 @@ create table products (
     updated_at timestamp default null,
     deleted_at timestamp default null,
 
-    foreign key (category_id) references product_categories(id) on delete cascade
+    foreign key (category_id) references product_categories(id) on delete cascade,
+    foreign key (tenant_id) references tenants(id) on delete cascade
 );
 
 -- Depends on order_categories (and later products)
 create table orders (
     id uuid primary key,
     category_id uuid,
+    tenant_id uuid,
     
     no_order varchar(150),
     order_date timestamp default null,
@@ -102,7 +146,8 @@ create table orders (
     updated_at timestamp default null,
     deleted_at timestamp default null,
 
-    foreign key (category_id) references order_categories(id) on delete cascade
+    foreign key (category_id) references order_categories(id) on delete cascade,
+    foreign key (tenant_id) references tenants(id) on delete cascade
 );
 
 -- Depends on orders and products

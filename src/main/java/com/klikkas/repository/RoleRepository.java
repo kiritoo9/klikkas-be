@@ -12,4 +12,6 @@ public interface RoleRepository extends
         JpaSpecificationExecutor<Role>{
 
     Optional<Role> findByIdAndDeletedAtIsNull(UUID roleId);
+
+    Optional<Role> findByNameAndDeletedAtIsNull(String string);
 }

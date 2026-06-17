@@ -2,6 +2,7 @@ package com.klikkas.service;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
+import java.util.UUID;
 
 import javax.crypto.SecretKey;
 
@@ -20,37 +21,35 @@ public class JwtService {
     private String secret;
 
     public String generateToken(
-        User user,
-        Integer expiration
-    ) {
-        
+            User user,
+            UUID tenantID,
+            Integer expiration) {
+
         SecretKey key = Keys.hmacShaKeyFor(
-            secret.getBytes(StandardCharsets.UTF_8)
-        );
+                secret.getBytes(StandardCharsets.UTF_8));
 
         return Jwts.builder()
-            .subject(user.getEmail())
-            .claim("id", user.getId())
-            .claim("role", user.getRole() != null ? user.getRole().getName() : null)
-            .issuedAt(new Date())
-            .expiration(
-                new Date(System.currentTimeMillis() + (86400000L * expiration))
-            )
-            .signWith(key)
-            .compact();
+                .subject(user.getEmail())
+                .claim("id", user.getId())
+                .claim("role", user.getRole() != null ? user.getRole().getName() : null)
+                .claim("tenantID", tenantID)
+                .issuedAt(new Date())
+                .expiration(
+                        new Date(System.currentTimeMillis() + (86400000L * expiration)))
+                .signWith(key)
+                .compact();
 
     }
 
     public boolean validateToken(String token) {
         try {
             SecretKey key = Keys.hmacShaKeyFor(
-                secret.getBytes(StandardCharsets.UTF_8)
-            );
+                    secret.getBytes(StandardCharsets.UTF_8));
 
             Jwts.parser()
-                .verifyWith(key)
-                .build()
-                .parseSignedClaims(token);
+                    .verifyWith(key)
+                    .build()
+                    .parseSignedClaims(token);
 
             return true;
         } catch (Exception e) {
@@ -60,28 +59,40 @@ public class JwtService {
 
     public String extractEmail(String token) {
         SecretKey key = Keys.hmacShaKeyFor(
-            secret.getBytes(StandardCharsets.UTF_8)
-        );
+                secret.getBytes(StandardCharsets.UTF_8));
 
         return Jwts.parser()
-            .verifyWith(key)
-            .build()
-            .parseSignedClaims(token)
-            .getPayload()
-            .getSubject();
+                .verifyWith(key)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload()
+                .getSubject();
     }
 
     public String extractRole(String token) {
         SecretKey key = Keys.hmacShaKeyFor(
-            secret.getBytes(StandardCharsets.UTF_8)
-        );
+                secret.getBytes(StandardCharsets.UTF_8));
 
         return Jwts.parser()
-            .verifyWith(key)
-            .build()
-            .parseSignedClaims(token)
-            .getPayload()
-            .get("role", String.class);
+                .verifyWith(key)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload()
+                .get("role", String.class);
+    }
+
+    public UUID extractTenantID(String token) {
+        SecretKey key = Keys.hmacShaKeyFor(
+                secret.getBytes(StandardCharsets.UTF_8));
+
+        String tenantID = Jwts.parser()
+                .verifyWith(key)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload()
+                .get("tenantID", String.class);
+
+        return UUID.fromString(tenantID);
     }
 
 }
