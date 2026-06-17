@@ -18,24 +18,32 @@ public class OrderCategory {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    UUID id;
+    private UUID id;
 
-    String name;
-    String description;
-    String categoryType;
-    Boolean isActive;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "tenant_id")
+    private Tenant tenant;
+
+    private String name;
+    private String description;
+    private String categoryType;
+    private Boolean isActive;
 
     @CreationTimestamp
     @Column(updatable = false)
-    LocalDateTime createdAt;
+    private LocalDateTime createdAt;
 
     @UpdateTimestamp
-    LocalDateTime updatedAt;
+    private LocalDateTime updatedAt;
 
-    LocalDateTime deletedAt;
+    private LocalDateTime deletedAt;
 
     public UUID getId() {
         return id;
+    }
+
+    public Tenant getTenant() {
+        return tenant;
     }
 
     public String getName() {

@@ -19,4 +19,6 @@ public interface OrderCategoryRepository extends
     boolean existsByNameIgnoreCaseAndIdNotAndDeletedAtIsNull(String name,
             UUID id);
 
+    Optional<OrderCategory> findByIdAndDeletedAtIsNullAndTenantId(UUID id, UUID tenantID);
+
 }

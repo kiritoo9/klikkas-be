@@ -1,4 +1,4 @@
-package com.klikkas.service;
+package com.klikkas.security;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Date;

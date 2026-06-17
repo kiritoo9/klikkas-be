@@ -15,9 +15,12 @@ import com.klikkas.dto.order_categories.OrderCategoryListResponse;
 import com.klikkas.dto.order_categories.OrderCategoryRequest;
 import com.klikkas.dto.order_categories.OrderCategoryResponse;
 import com.klikkas.entity.OrderCategory;
+import com.klikkas.entity.Tenant;
 import com.klikkas.exception.BadRequestException;
 import com.klikkas.exception.NotFoundException;
 import com.klikkas.repository.OrderCategoryRepository;
+import com.klikkas.repository.TenantRepository;
+import com.klikkas.security.TenantContext;
 import com.klikkas.specification.OrderCategorySpecification;
 
 import lombok.RequiredArgsConstructor;
@@ -26,107 +29,119 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class OrderCategoryService {
 
-    private final OrderCategoryRepository categoryRepository;
+        private final OrderCategoryRepository categoryRepository;
+        private final TenantRepository tenantRepository;
 
-    public OrderCategoryListResponse getCategories(
-            Integer page,
-            Integer limit,
-            String order,
-            String dir,
-            String keywords,
-            String categoryType) {
-        Pageable pageable;
+        public OrderCategoryListResponse getCategories(
+                        Integer page,
+                        Integer limit,
+                        String order,
+                        String dir,
+                        String keywords,
+                        String categoryType) {
 
-        if (order != "" && !order.isBlank()) {
-            Sort sort = dir.equalsIgnoreCase("desc")
-                    ? Sort.by(order).descending()
-                    : Sort.by(order).ascending();
+                UUID tenantID = TenantContext.getTenantId();
+                Pageable pageable;
 
-            pageable = PageRequest.of(page - 1, limit, sort);
-        } else {
-            pageable = PageRequest.of(page - 1, limit);
+                if (order != "" && !order.isBlank()) {
+                        Sort sort = dir.equalsIgnoreCase("desc")
+                                        ? Sort.by(order).descending()
+                                        : Sort.by(order).ascending();
+
+                        pageable = PageRequest.of(page - 1, limit, sort);
+                } else {
+                        pageable = PageRequest.of(page - 1, limit);
+                }
+
+                Specification<OrderCategory> spec = Specification
+                                .where(OrderCategorySpecification.notDeleted())
+                                .and(OrderCategorySpecification.categoryType(categoryType))
+                                .and(OrderCategorySpecification.byTenant(tenantID))
+                                .and(OrderCategorySpecification.keyword(keywords));
+
+                Page<OrderCategory> result = categoryRepository.findAll(spec, pageable);
+
+                List<OrderCategoryResponse> data = result
+                                .getContent()
+                                .stream()
+                                .map(c -> new OrderCategoryResponse(
+                                                c.getId(),
+                                                c.getName(),
+                                                c.getDescription(),
+                                                c.getCategoryType(),
+                                                c.getIsActive(),
+                                                c.getCreatedAt()))
+                                .toList();
+
+                return new OrderCategoryListResponse(
+                                data,
+                                page,
+                                result.getTotalPages());
         }
 
-        Specification<OrderCategory> spec = Specification
-                .where(OrderCategorySpecification.notDeleted())
-                .and(OrderCategorySpecification.categoryType(categoryType))
-                .and(OrderCategorySpecification.keyword(keywords));
+        public OrderCategoryResponse getCategory(UUID id) {
+                UUID tenantID = TenantContext.getTenantId();
+                OrderCategory category = categoryRepository.findByIdAndDeletedAtIsNullAndTenantId(id, tenantID)
+                                .orElseThrow(() -> new NotFoundException("Data not found", "DATA_NOT_FOUND"));
 
-        Page<OrderCategory> result = categoryRepository.findAll(spec, pageable);
-
-        List<OrderCategoryResponse> data = result
-                .getContent()
-                .stream()
-                .map(c -> new OrderCategoryResponse(
-                        c.getId(),
-                        c.getName(),
-                        c.getDescription(),
-                        c.getCategoryType(),
-                        c.getIsActive(),
-                        c.getCreatedAt()))
-                .toList();
-
-        return new OrderCategoryListResponse(
-                data,
-                page,
-                result.getTotalPages());
-    }
-
-    public OrderCategoryResponse getCategory(UUID id) {
-        OrderCategory category = categoryRepository.findByIdAndDeletedAtIsNull(id)
-                .orElseThrow(() -> new NotFoundException("Data not found", "DATA_NOT_FOUND"));
-
-        return new OrderCategoryResponse(
-                category.getId(),
-                category.getName(),
-                category.getDescription(),
-                category.getCategoryType(),
-                category.getIsActive(),
-                category.getCreatedAt());
-    }
-
-    public OrderCategoryResponse createCategory(OrderCategoryRequest req) {
-        if (categoryRepository.existsByNameIgnoreCaseAndDeletedAtIsNull(req.name())) {
-            throw new BadRequestException("Name already taken");
+                return new OrderCategoryResponse(
+                                category.getId(),
+                                category.getName(),
+                                category.getDescription(),
+                                category.getCategoryType(),
+                                category.getIsActive(),
+                                category.getCreatedAt());
         }
 
-        OrderCategory category = new OrderCategory();
-        category.setName(req.name());
-        category.setDescription(req.description());
-        category.setCategoryType(req.category_type());
-        category.setIsActive(req.is_active());
+        public OrderCategoryResponse createCategory(OrderCategoryRequest req) {
+                if (categoryRepository.existsByNameIgnoreCaseAndDeletedAtIsNull(req.name())) {
+                        throw new BadRequestException("Name already taken");
+                }
 
-        OrderCategory saved = categoryRepository.save(category);
-        return new OrderCategoryResponse(
-                saved.getId(),
-                saved.getName(),
-                saved.getDescription(),
-                saved.getCategoryType(),
-                saved.getIsActive(),
-                saved.getCreatedAt());
-    }
+                UUID tenantID = TenantContext.getTenantId();
+                Tenant tenant = tenantRepository.findByIdAndDeletedAtIsNull(tenantID)
+                                .orElseThrow(() -> new BadRequestException("Tenant is not valid"));
 
-    public void updateCategory(UUID id, OrderCategoryRequest req) {
-        OrderCategory category = categoryRepository.findByIdAndDeletedAtIsNull(id)
-                .orElseThrow(() -> new NotFoundException("Data not found", "DATA_NOT_FOUND"));
+                OrderCategory category = new OrderCategory();
+                category.setName(req.name());
+                category.setTenant(tenant);
+                category.setDescription(req.description());
+                category.setCategoryType(req.category_type());
+                category.setIsActive(req.is_active());
 
-        if (categoryRepository.existsByNameIgnoreCaseAndIdNotAndDeletedAtIsNull(req.name(), id)) {
-            throw new BadRequestException("Name already taken");
+                OrderCategory saved = categoryRepository.save(category);
+                return new OrderCategoryResponse(
+                                saved.getId(),
+                                saved.getName(),
+                                saved.getDescription(),
+                                saved.getCategoryType(),
+                                saved.getIsActive(),
+                                saved.getCreatedAt());
         }
 
-        category.setName(req.name());
-        category.setCategoryType(req.category_type());
-        category.setDescription(req.description());
-        category.setIsActive(req.is_active());
-        categoryRepository.save(category);
-    }
+        public void updateCategory(UUID id, OrderCategoryRequest req) {
+                UUID tenantID = TenantContext.getTenantId();
+                OrderCategory category = categoryRepository.findByIdAndDeletedAtIsNullAndTenantId(id, tenantID)
+                                .orElseThrow(() -> new NotFoundException("Data not found", "DATA_NOT_FOUND"));
 
-    public void deleteCategory(UUID id) {
-        OrderCategory category = categoryRepository.findByIdAndDeletedAtIsNull(id)
-                .orElseThrow(() -> new NotFoundException("Data not found", "DATA_NOT_FOUND"));
+                if (categoryRepository.existsByNameIgnoreCaseAndIdNotAndDeletedAtIsNull(req.name(), id)) {
+                        throw new BadRequestException("Name already taken");
+                }
 
-        category.setDeletedAt(LocalDateTime.now());
-        categoryRepository.save(category);
-    }
+                category.setName(req.name());
+                category.setCategoryType(req.category_type());
+                category.setDescription(req.description());
+                category.setIsActive(req.is_active());
+                categoryRepository.save(category);
+        }
+
+        public void deleteCategory(UUID id) {
+                UUID tenantID = TenantContext.getTenantId();
+                OrderCategory category = categoryRepository.findByIdAndDeletedAtIsNullAndTenantId(id, tenantID)
+                                .orElseThrow(() -> new NotFoundException("Data not found", "DATA_NOT_FOUND"));
+
+                category.setDeletedAt(LocalDateTime.now());
+                categoryRepository.save(category);
+        }
 
 }

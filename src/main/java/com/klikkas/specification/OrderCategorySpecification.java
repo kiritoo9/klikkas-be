@@ -1,13 +1,25 @@
 package com.klikkas.specification;
 
+import java.util.UUID;
+
 import org.springframework.data.jpa.domain.Specification;
 
 import com.klikkas.entity.OrderCategory;
+import com.klikkas.entity.Tenant;
+
+import jakarta.persistence.criteria.Join;
 
 public class OrderCategorySpecification {
 
     public static Specification<OrderCategory> notDeleted() {
         return (root, query, cb) -> cb.isNull(root.get("deletedAt"));
+    }
+
+    public static Specification<OrderCategory> byTenant(UUID tenantID) {
+        return (root, query, cb) -> {
+            Join<OrderCategory, Tenant> tenant = root.join("tenant");
+            return cb.equal(tenant.get("id"), tenantID);
+        };
     }
 
     public static Specification<OrderCategory> categoryType(String t) {

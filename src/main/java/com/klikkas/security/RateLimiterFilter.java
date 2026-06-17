@@ -1,4 +1,4 @@
-package com.klikkas.service;
+package com.klikkas.security;
 
 import java.io.IOException;
 import java.time.Duration;

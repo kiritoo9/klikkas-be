@@ -19,6 +19,7 @@ import com.klikkas.repository.RoleRepository;
 import com.klikkas.repository.TenantRepository;
 import com.klikkas.repository.UserRepository;
 import com.klikkas.repository.UserTenantRepository;
+import com.klikkas.security.JwtService;
 import com.klikkas.util.RandomString;
 
 import jakarta.transaction.Transactional;
