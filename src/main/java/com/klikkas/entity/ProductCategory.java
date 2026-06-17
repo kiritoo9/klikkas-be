@@ -20,6 +20,10 @@ public class ProductCategory {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "tenant_id")
+    private Tenant tenant;
+
     private String name;
     private String description;
     private Boolean isActive;
@@ -35,6 +39,10 @@ public class ProductCategory {
 
     public UUID getId() {
         return id;
+    }
+
+    public Tenant getTenant() {
+        return tenant;
     }
 
     public String getName() {

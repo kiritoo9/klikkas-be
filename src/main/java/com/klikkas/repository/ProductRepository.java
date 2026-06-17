@@ -25,4 +25,6 @@ public interface ProductRepository extends
 
     boolean existsBySkuIgnoreCaseAndDeletedAtIsNullAndIdNot(String sku, UUID id);
 
+    Optional<Product> findByIdAndDeletedAtIsNullAndTenantId(UUID id, UUID tenantID);
+
 }

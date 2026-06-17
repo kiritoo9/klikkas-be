@@ -24,6 +24,10 @@ public class Product {
     @JoinColumn(name = "category_id")
     private ProductCategory category;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "tenant_id")
+    private Tenant tenant;
+
     private String sku;
     private String name;
     private String description;
@@ -47,6 +51,10 @@ public class Product {
 
     public ProductCategory getCategory() {
         return category;
+    }
+
+    public Tenant getTenant() {
+        return tenant;
     }
 
     public String getSku() {

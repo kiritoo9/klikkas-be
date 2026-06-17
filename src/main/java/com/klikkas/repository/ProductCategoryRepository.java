@@ -19,4 +19,6 @@ public interface ProductCategoryRepository extends
     boolean existsByNameIgnoreCase(String name);
 
     boolean existsByNameIgnoreCaseAndIdNot(String name, UUID id);
+
+    Optional<ProductCategory> findByIdAndDeletedAtIsNullAndTenantId(UUID id, UUID tenantID);
 }

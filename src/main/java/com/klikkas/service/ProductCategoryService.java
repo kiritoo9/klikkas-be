@@ -15,9 +15,12 @@ import com.klikkas.dto.product_categories.ProductCategoryRequest;
 import com.klikkas.dto.product_categories.ProductCategoryListResponse;
 import com.klikkas.dto.product_categories.ProductCategoryResponse;
 import com.klikkas.entity.ProductCategory;
+import com.klikkas.entity.Tenant;
 import com.klikkas.exception.BadRequestException;
 import com.klikkas.exception.NotFoundException;
 import com.klikkas.repository.ProductCategoryRepository;
+import com.klikkas.repository.TenantRepository;
+import com.klikkas.security.TenantContext;
 import com.klikkas.specification.ProductCategorySpecification;
 
 import lombok.RequiredArgsConstructor;
@@ -27,6 +30,7 @@ import lombok.RequiredArgsConstructor;
 public class ProductCategoryService {
 
         public final ProductCategoryRepository categoryRepo;
+        public final TenantRepository tenantRepository;
 
         public ProductCategoryListResponse getCategories(
                         Integer page,
@@ -34,6 +38,7 @@ public class ProductCategoryService {
                         String order,
                         String dir,
                         String keywords) {
+                UUID tenantID = TenantContext.getTenantId();
                 Pageable pageable;
 
                 if (order != "" && !order.isBlank()) {
@@ -49,6 +54,7 @@ public class ProductCategoryService {
                 // perform query
                 Specification<ProductCategory> spec = Specification
                                 .where(ProductCategorySpecification.notDeleted())
+                                .and(ProductCategorySpecification.byTenant(tenantID))
                                 .and(ProductCategorySpecification.keyword(keywords));
 
                 Page<ProductCategory> result = categoryRepo.findAll(spec, pageable);
@@ -70,7 +76,8 @@ public class ProductCategoryService {
         }
 
         public ProductCategoryResponse getCategory(UUID id) {
-                ProductCategory category = categoryRepo.findByIdAndDeletedAtIsNull(id)
+                UUID tenantID = TenantContext.getTenantId();
+                ProductCategory category = categoryRepo.findByIdAndDeletedAtIsNullAndTenantId(id, tenantID)
                                 .orElseThrow(() -> new NotFoundException(
                                                 "Data not found",
                                                 "DATA_NOT_FOUND"));
@@ -87,7 +94,12 @@ public class ProductCategoryService {
                         throw new BadRequestException("Name already taken");
                 }
 
+                UUID tenantID = TenantContext.getTenantId();
+                Tenant tenant = tenantRepository.findByIdAndDeletedAtIsNull(tenantID)
+                                .orElseThrow(() -> new BadRequestException("Invalid tenant"));
+
                 ProductCategory category = new ProductCategory();
+                category.setTenant(tenant);
                 category.setName(req.name());
                 category.setDescription(req.description());
                 category.setIsActive(req.is_active());
@@ -101,7 +113,8 @@ public class ProductCategoryService {
         }
 
         public void updateCategory(UUID id, ProductCategoryRequest req) {
-                ProductCategory category = categoryRepo.findByIdAndDeletedAtIsNull(id)
+                UUID tenantID = TenantContext.getTenantId();
+                ProductCategory category = categoryRepo.findByIdAndDeletedAtIsNullAndTenantId(id, tenantID)
                                 .orElseThrow(() -> new NotFoundException(
                                                 "Data not found",
                                                 "DATA_NOT_FOUND"));
@@ -117,7 +130,8 @@ public class ProductCategoryService {
         }
 
         public void deleteCategory(UUID id) {
-                ProductCategory category = categoryRepo.findByIdAndDeletedAtIsNull(id)
+                UUID tenantID = TenantContext.getTenantId();
+                ProductCategory category = categoryRepo.findByIdAndDeletedAtIsNullAndTenantId(id, tenantID)
                                 .orElseThrow(() -> new NotFoundException(
                                                 "Data not found",
                                                 "DATA_NOT_FOUND"));

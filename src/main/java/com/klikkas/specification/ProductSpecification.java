@@ -6,6 +6,7 @@ import org.springframework.data.jpa.domain.Specification;
 
 import com.klikkas.entity.Product;
 import com.klikkas.entity.ProductCategory;
+import com.klikkas.entity.Tenant;
 
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
@@ -14,6 +15,13 @@ public class ProductSpecification {
 
     public static Specification<Product> notDeleted() {
         return (root, query, cb) -> cb.isNull(root.get("deletedAt"));
+    }
+
+    public static Specification<Product> byTenant(UUID tenantID) {
+        return (root, query, cb) -> {
+            Join<Product, Tenant> tenant = root.join("tenant");
+            return cb.equal(tenant.get("id"), tenantID);
+        };
     }
 
     public static Specification<Product> category(UUID categoryId) {
