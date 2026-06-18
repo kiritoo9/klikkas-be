@@ -67,6 +67,7 @@ public class OrderService {
                                 new OrderResponse(
                                                 order.getId(),
                                                 order.getCategory().getId(),
+                                                order.getOrderType(),
 
                                                 order.getNoOrder(),
                                                 order.getOrderDate(),
@@ -86,6 +87,7 @@ public class OrderService {
         public OrderListResponse getOrders(
                         Integer page,
                         Integer limit,
+                        String orderType,
                         String order,
                         String dir,
                         String keywords,
@@ -106,6 +108,7 @@ public class OrderService {
                 Specification<Order> spec = Specification
                                 .where(OrderSpecification.notDeleted())
                                 .and(OrderSpecification.byTenant(tenantID))
+                                .and(OrderSpecification.byType(orderType))
                                 .and(OrderSpecification.byCategory(categoryID));
 
                 Page<Order> result = orderRepo.findAll(spec, pageable);
@@ -116,6 +119,7 @@ public class OrderService {
                                 .map(o -> new OrderResponse(
                                                 o.getId(),
                                                 o.getCategory().getId(),
+                                                o.getOrderType(),
 
                                                 o.getNoOrder(),
                                                 o.getOrderDate(),

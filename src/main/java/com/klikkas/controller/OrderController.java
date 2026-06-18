@@ -32,11 +32,12 @@ public class OrderController {
     public OrderListResponse getOrders(
             @RequestParam(defaultValue = "1") Integer page,
             @RequestParam(defaultValue = "10") Integer limit,
+            @RequestParam(required = true, defaultValue = "kas_masuk") String orderType,
             @RequestParam(defaultValue = "createdAt", required = false) String order,
             @RequestParam(defaultValue = "desc", required = false) String dir,
             @RequestParam(required = false) String keywords,
-            @RequestParam(required = false) UUID categoryID) {
-        return orderService.getOrders(page, limit, order, dir, keywords, categoryID);
+            @RequestParam(required = false) UUID categoryId) {
+        return orderService.getOrders(page, limit, orderType, order, dir, keywords, categoryId);
     }
 
     @GetMapping("/orders/{id}")

@@ -16,6 +16,10 @@ public class OrderSpecification {
         return (root, query, cb) -> cb.isNull(root.get("deletedAt"));
     }
 
+    public static Specification<Order> byType(String t) {
+        return (root, query, cb) -> cb.equal(cb.lower(root.get("orderType")), t.toLowerCase());
+    }
+
     public static Specification<Order> byCategory(UUID categoryID) {
         return (root, query, cb) -> {
             if (categoryID == null) {

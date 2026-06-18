@@ -30,6 +30,7 @@ public class Order {
     @JoinColumn(name = "tenant_id")
     private Tenant tenant;
 
+    private String orderType;
     private String noOrder;
     private LocalDateTime orderDate;
     private Integer totalQty;
