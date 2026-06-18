@@ -24,6 +24,14 @@ public class OrderCategory {
     @JoinColumn(name = "tenant_id")
     private Tenant tenant;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "debit_account_id")
+    private Account debitAccount;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "credit_account_id")
+    private Account creditAccount;
+
     private String name;
     private String description;
     private String categoryType;

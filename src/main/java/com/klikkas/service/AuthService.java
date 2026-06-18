@@ -1,20 +1,28 @@
 package com.klikkas.service;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.klikkas.data.OrderCategories;
 import com.klikkas.dto.auth.LoginRequest;
 import com.klikkas.dto.auth.LoginResponse;
 import com.klikkas.dto.auth.RegistRequest;
+import com.klikkas.dto.order_categories.CategoryAccountTemplate;
 import com.klikkas.dto.users.UserResponse;
+import com.klikkas.entity.Account;
+import com.klikkas.entity.OrderCategory;
 import com.klikkas.entity.Role;
 import com.klikkas.entity.Tenant;
 import com.klikkas.entity.User;
 import com.klikkas.entity.UserTenant;
 import com.klikkas.exception.BadRequestException;
 import com.klikkas.exception.NotFoundException;
+import com.klikkas.repository.AccountRepository;
+import com.klikkas.repository.OrderCategoryRepository;
 import com.klikkas.repository.RoleRepository;
 import com.klikkas.repository.TenantRepository;
 import com.klikkas.repository.UserRepository;
@@ -33,6 +41,8 @@ public class AuthService {
     public final RoleRepository roleRepository;
     public final TenantRepository tenantRepository;
     public final UserTenantRepository userTenantRepository;
+    public final AccountRepository accountRepository;
+    public final OrderCategoryRepository categoryRepository;
 
     public final JwtService jwtService;
     public final PasswordEncoder passwordEncoder;
@@ -113,6 +123,32 @@ public class AuthService {
         userTenant.setRemark("created-automatically");
         userTenant = userTenantRepository.save(userTenant);
 
+        // add default data for order category
+        List<OrderCategory> categories = new ArrayList<>();
+        List<CategoryAccountTemplate> templates = OrderCategories.get();
+
+        for (CategoryAccountTemplate t : templates) {
+            OrderCategory c = new OrderCategory();
+            c.setTenant(tenant);
+
+            Account debitAccount = accountRepository.findByCodeAndDeletedAtIsNull(t.debitAccountCode())
+                    .orElseThrow(() -> new BadRequestException("Invalid debit account"));
+            c.setDebitAccount(debitAccount);
+
+            Account creditAccount = accountRepository.findByCodeAndDeletedAtIsNull(t.creditAccountCode())
+                    .orElseThrow(() -> new BadRequestException("Invalid credit account"));
+            c.setCreditAccount(creditAccount);
+
+            c.setName(t.name());
+            c.setCategoryType(t.categoryType());
+            c.setDescription(t.description());
+            c.setIsActive(true);
+
+            categories.add(c);
+        }
+        categoryRepository.saveAll(categories);
+
+        // response data
         return new UserResponse(
                 user.getId(),
                 user.getRole().getId(),

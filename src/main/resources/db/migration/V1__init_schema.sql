@@ -9,6 +9,20 @@ create table roles (
     deleted_at timestamp default null
 );
 
+CREATE TABLE accounts (
+    id UUID PRIMARY KEY,
+    code VARCHAR(20) NOT NULL UNIQUE,
+    name VARCHAR(100) NOT NULL,
+    type VARCHAR(20) NOT NULL,
+    parent_id UUID NULL,
+
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+
+    created_at TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP NULL,
+    deleted_at TIMESTAMP NULL
+);
+
 create table tenants (
     id uuid primary key,
     code varchar(50) unique,
@@ -27,6 +41,8 @@ create table tenants (
 create table order_categories (
     id uuid primary key,
     tenant_id uuid,
+    debit_account_id uuid default null,
+    credit_account_id uuid default null,
 
     name varchar(150),
     description text,
@@ -39,7 +55,9 @@ create table order_categories (
     updated_at timestamp default null,
     deleted_at timestamp default null,
 
-    foreign key (tenant_id) references tenants(id) on delete cascade
+    foreign key (tenant_id) references tenants(id) on delete cascade,
+    foreign key (debit_account_id) references accounts(id) on delete cascade,
+    foreign key (credit_account_id) references accounts(id) on delete cascade
 );
 
 create table product_categories (
@@ -135,6 +153,12 @@ create table orders (
     discount_amount numeric default 0,
     grand_total numeric default 0,
 
+    order_type varchar(50) check (
+        order_type in (
+            'kas_masuk', 'kas_keluar'
+        )
+    ),
+
     status varchar(50) check (
          status in (
             'pending', 'paid', 'canceled'
@@ -168,4 +192,34 @@ create table order_items (
 
     foreign key (order_id) references orders(id) on delete cascade,
     foreign key (product_id) references products(id) on delete cascade
+);
+
+-- Depends on journal
+CREATE TABLE journals (
+    id UUID PRIMARY KEY,
+    journal_date TIMESTAMP NOT NULL,
+    reference_type VARCHAR(50),
+    reference_id UUID,
+    description TEXT,
+
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP NULL,
+    deleted_at TIMESTAMP NULL
+);
+
+CREATE TABLE journal_details (
+    id UUID PRIMARY KEY,
+    journal_id UUID NOT NULL,
+    account_id UUID NOT NULL,
+
+    debit NUMERIC(18,2) NOT NULL DEFAULT 0,
+    credit NUMERIC(18,2) NOT NULL DEFAULT 0,
+    remark TEXT,
+
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP NULL,
+    deleted_at TIMESTAMP NULL,
+
+    FOREIGN KEY (journal_id) REFERENCES journals(id) ON DELETE CASCADE,
+    FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE
 );

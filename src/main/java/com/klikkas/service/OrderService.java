@@ -1,5 +1,6 @@
 package com.klikkas.service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -17,6 +18,8 @@ import com.klikkas.dto.orders.OrderItemResponse;
 import com.klikkas.dto.orders.OrderListResponse;
 import com.klikkas.dto.orders.OrderRequest;
 import com.klikkas.dto.orders.OrderResponse;
+import com.klikkas.entity.Journal;
+import com.klikkas.entity.JournalDetail;
 import com.klikkas.entity.Order;
 import com.klikkas.entity.OrderCategory;
 import com.klikkas.entity.OrderItem;
@@ -24,6 +27,8 @@ import com.klikkas.entity.Product;
 import com.klikkas.entity.Tenant;
 import com.klikkas.exception.BadRequestException;
 import com.klikkas.exception.NotFoundException;
+import com.klikkas.repository.JournalDetailRepository;
+import com.klikkas.repository.JournalRepository;
 import com.klikkas.repository.OrderCategoryRepository;
 import com.klikkas.repository.OrderItemRepository;
 import com.klikkas.repository.OrderRepository;
@@ -46,6 +51,8 @@ public class OrderService {
         private final OrderCategoryRepository categoryRepo;
         private final TenantRepository tenantRepo;
         private final ProductRepository productRepo;
+        private final JournalRepository journalRepo;
+        private final JournalDetailRepository journalDetailRepo;
 
         private OrderDetailResponse translateDetail(
                         Order order,
@@ -207,6 +214,19 @@ public class OrderService {
                 }
                 orderItemRepo.saveAll(orderItems);
 
+                // insert journal
+                Journal journal = new Journal();
+                journal.setJournalDate(LocalDateTime.now());
+                journal.setReferenceType(req.order_type());
+                journal.setReferenceId(order.getId());
+                journal.setDescription("Transaction from order " + req.order_type());
+                journal = journalRepo.save(journal);
+
+                JournalDetail debitJournal = new JournalDetail();
+                debitJournal.setJournal(journal);
+                debitJournal.setAccount(null);
+
+                // response
                 return translateDetail(order, orderItems);
         }
 

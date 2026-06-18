@@ -1,0 +1,12 @@
+package com.klikkas.repository;
+
+import java.util.UUID;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.klikkas.entity.Journal;
+
+public interface JournalRepository extends
+        JpaRepository<Journal, UUID> {
+
+}

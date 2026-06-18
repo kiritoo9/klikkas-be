@@ -14,10 +14,12 @@ import org.springframework.stereotype.Service;
 import com.klikkas.dto.order_categories.OrderCategoryListResponse;
 import com.klikkas.dto.order_categories.OrderCategoryRequest;
 import com.klikkas.dto.order_categories.OrderCategoryResponse;
+import com.klikkas.entity.Account;
 import com.klikkas.entity.OrderCategory;
 import com.klikkas.entity.Tenant;
 import com.klikkas.exception.BadRequestException;
 import com.klikkas.exception.NotFoundException;
+import com.klikkas.repository.AccountRepository;
 import com.klikkas.repository.OrderCategoryRepository;
 import com.klikkas.repository.TenantRepository;
 import com.klikkas.security.TenantContext;
@@ -31,6 +33,7 @@ public class OrderCategoryService {
 
         private final OrderCategoryRepository categoryRepository;
         private final TenantRepository tenantRepository;
+        public final AccountRepository accountRepository;
 
         public OrderCategoryListResponse getCategories(
                         Integer page,
@@ -66,6 +69,13 @@ public class OrderCategoryService {
                                 .stream()
                                 .map(c -> new OrderCategoryResponse(
                                                 c.getId(),
+
+                                                c.getDebitAccount() != null ? c.getDebitAccount().getId() : null,
+                                                c.getDebitAccount() != null ? c.getDebitAccount().getName() : null,
+
+                                                c.getCreditAccount() != null ? c.getCreditAccount().getId() : null,
+                                                c.getCreditAccount() != null ? c.getCreditAccount().getName() : null,
+
                                                 c.getName(),
                                                 c.getDescription(),
                                                 c.getCategoryType(),
@@ -86,6 +96,13 @@ public class OrderCategoryService {
 
                 return new OrderCategoryResponse(
                                 category.getId(),
+
+                                category.getDebitAccount() != null ? category.getDebitAccount().getId() : null,
+                                category.getDebitAccount() != null ? category.getDebitAccount().getName() : null,
+
+                                category.getCreditAccount() != null ? category.getCreditAccount().getId() : null,
+                                category.getCreditAccount() != null ? category.getCreditAccount().getName() : null,
+
                                 category.getName(),
                                 category.getDescription(),
                                 category.getCategoryType(),
@@ -103,8 +120,21 @@ public class OrderCategoryService {
                                 .orElseThrow(() -> new BadRequestException("Tenant is not valid"));
 
                 OrderCategory category = new OrderCategory();
-                category.setName(req.name());
                 category.setTenant(tenant);
+
+                if (req.debit_account_id() != null) {
+                        Account debitAccount = accountRepository.findByIdAndDeletedAtIsNull(req.debit_account_id())
+                                        .orElseThrow(() -> new BadRequestException("Invalid debit account"));
+                        category.setDebitAccount(debitAccount);
+                }
+
+                if (req.credit_account_id() != null) {
+                        Account creditAccount = accountRepository.findByIdAndDeletedAtIsNull(req.credit_account_id())
+                                        .orElseThrow(() -> new BadRequestException("Invalid credit account"));
+                        category.setCreditAccount(creditAccount);
+                }
+
+                category.setName(req.name());
                 category.setDescription(req.description());
                 category.setCategoryType(req.category_type());
                 category.setIsActive(req.is_active());
@@ -112,6 +142,13 @@ public class OrderCategoryService {
                 OrderCategory saved = categoryRepository.save(category);
                 return new OrderCategoryResponse(
                                 saved.getId(),
+
+                                saved.getDebitAccount() != null ? saved.getDebitAccount().getId() : null,
+                                saved.getDebitAccount() != null ? saved.getDebitAccount().getName() : null,
+
+                                saved.getCreditAccount() != null ? saved.getCreditAccount().getId() : null,
+                                saved.getCreditAccount() != null ? saved.getCreditAccount().getName() : null,
+
                                 saved.getName(),
                                 saved.getDescription(),
                                 saved.getCategoryType(),
@@ -126,6 +163,18 @@ public class OrderCategoryService {
 
                 if (categoryRepository.existsByNameIgnoreCaseAndIdNotAndDeletedAtIsNull(req.name(), id)) {
                         throw new BadRequestException("Name already taken");
+                }
+
+                if (req.debit_account_id() != null) {
+                        Account debitAccount = accountRepository.findByIdAndDeletedAtIsNull(req.debit_account_id())
+                                        .orElseThrow(() -> new BadRequestException("Invalid debit account"));
+                        category.setDebitAccount(debitAccount);
+                }
+
+                if (req.credit_account_id() != null) {
+                        Account creditAccount = accountRepository.findByIdAndDeletedAtIsNull(req.credit_account_id())
+                                        .orElseThrow(() -> new BadRequestException("Invalid credit account"));
+                        category.setCreditAccount(creditAccount);
                 }
 
                 category.setName(req.name());
