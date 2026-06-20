@@ -18,6 +18,7 @@ import com.klikkas.dto.orders.OrderItemResponse;
 import com.klikkas.dto.orders.OrderListResponse;
 import com.klikkas.dto.orders.OrderRequest;
 import com.klikkas.dto.orders.OrderResponse;
+import com.klikkas.entity.Account;
 import com.klikkas.entity.Journal;
 import com.klikkas.entity.JournalDetail;
 import com.klikkas.entity.Order;
@@ -27,6 +28,7 @@ import com.klikkas.entity.Product;
 import com.klikkas.entity.Tenant;
 import com.klikkas.exception.BadRequestException;
 import com.klikkas.exception.NotFoundException;
+import com.klikkas.repository.AccountRepository;
 import com.klikkas.repository.JournalDetailRepository;
 import com.klikkas.repository.JournalRepository;
 import com.klikkas.repository.OrderCategoryRepository;
@@ -53,6 +55,7 @@ public class OrderService {
         private final ProductRepository productRepo;
         private final JournalRepository journalRepo;
         private final JournalDetailRepository journalDetailRepo;
+        private final AccountRepository accountRepository;
 
         private OrderDetailResponse translateDetail(
                         Order order,
@@ -214,17 +217,42 @@ public class OrderService {
                 }
                 orderItemRepo.saveAll(orderItems);
 
-                // insert journal
-                Journal journal = new Journal();
-                journal.setJournalDate(LocalDateTime.now());
-                journal.setReferenceType(req.order_type());
-                journal.setReferenceId(order.getId());
-                journal.setDescription("Transaction from order " + req.order_type());
-                journal = journalRepo.save(journal);
+                // insert journal ONLY when category.debit_account_id and
+                // category.credit_account_id is not null
+                if (category.getDebitAccount() != null && category.getCreditAccount() != null) {
+                        Account debitAccount = accountRepository
+                                        .findByIdAndDeletedAtIsNull(category.getDebitAccount().getId())
+                                        .orElseThrow(() -> new BadRequestException(
+                                                        "Invalid debit account journal for this category"));
 
-                JournalDetail debitJournal = new JournalDetail();
-                debitJournal.setJournal(journal);
-                debitJournal.setAccount(null);
+                        Account creditAccount = accountRepository
+                                        .findByIdAndDeletedAtIsNull(category.getCreditAccount().getId())
+                                        .orElseThrow(() -> new BadRequestException(
+                                                        "Invalid credit account journal for this category"));
+
+                        Journal journal = new Journal();
+                        journal.setJournalDate(LocalDateTime.now());
+                        journal.setReferenceType(req.order_type());
+                        journal.setReferenceId(order.getId());
+                        journal.setDescription("Transaction from order " + req.order_type());
+                        journal = journalRepo.save(journal);
+
+                        JournalDetail debitJournal = new JournalDetail();
+                        debitJournal.setJournal(journal);
+                        debitJournal.setAccount(debitAccount);
+                        debitJournal.setDebit(order.getGrandTotal());
+                        debitJournal.setCredit(0);
+                        debitJournal.setRemark("auto_journal");
+                        journalDetailRepo.save(debitJournal);
+
+                        JournalDetail creditJournal = new JournalDetail();
+                        creditJournal.setJournal(journal);
+                        creditJournal.setAccount(creditAccount);
+                        creditJournal.setDebit(0);
+                        creditJournal.setCredit(order.getGrandTotal());
+                        creditJournal.setRemark("auto_journal");
+                        journalDetailRepo.save(creditJournal);
+                }
 
                 // response
                 return translateDetail(order, orderItems);
@@ -301,6 +329,57 @@ public class OrderService {
                 order.setGrandTotal(grandTotal);
 
                 orderRepo.save(order);
+
+                // re-write journal: delete by reference_id then re-insert
+                java.util.List<Journal> existingJournals = journalRepo.findAll()
+                                .stream()
+                                .filter(j -> j.getReferenceId() != null
+                                                && j.getReferenceId().equals(order.getId())
+                                                && j.getReferenceType() != null
+                                                && j.getReferenceType().equals(order.getOrderType())
+                                                && j.getDeletedAt() == null)
+                                .toList();
+                for (Journal j : existingJournals) {
+                        j.setDeletedAt(java.time.LocalDateTime.now());
+                }
+                journalRepo.saveAll(existingJournals);
+
+                // re-insert journal if category has debit/credit accounts
+                OrderCategory category = order.getCategory();
+                if (category.getDebitAccount() != null && category.getCreditAccount() != null) {
+                        Account debitAccount = accountRepository
+                                        .findByIdAndDeletedAtIsNull(category.getDebitAccount().getId())
+                                        .orElseThrow(() -> new BadRequestException(
+                                                        "Invalid debit account journal for this category"));
+
+                        Account creditAccount = accountRepository
+                                        .findByIdAndDeletedAtIsNull(category.getCreditAccount().getId())
+                                        .orElseThrow(() -> new BadRequestException(
+                                                        "Invalid credit account journal for this category"));
+
+                        Journal journal = new Journal();
+                        journal.setJournalDate(LocalDateTime.now());
+                        journal.setReferenceType(order.getOrderType());
+                        journal.setReferenceId(order.getId());
+                        journal.setDescription("Transaction from order " + order.getOrderType());
+                        journal = journalRepo.save(journal);
+
+                        JournalDetail debitJournal = new JournalDetail();
+                        debitJournal.setJournal(journal);
+                        debitJournal.setAccount(debitAccount);
+                        debitJournal.setDebit(order.getGrandTotal());
+                        debitJournal.setCredit(0);
+                        debitJournal.setRemark("auto_journal");
+                        journalDetailRepo.save(debitJournal);
+
+                        JournalDetail creditJournal = new JournalDetail();
+                        creditJournal.setJournal(journal);
+                        creditJournal.setAccount(creditAccount);
+                        creditJournal.setDebit(0);
+                        creditJournal.setCredit(order.getGrandTotal());
+                        creditJournal.setRemark("auto_journal");
+                        journalDetailRepo.save(creditJournal);
+                }
         }
 
         @Transactional
@@ -309,7 +388,40 @@ public class OrderService {
                 Order order = orderRepo.findByIdAndDeletedAtIsNullAndTenantId(id, tenantID)
                                 .orElseThrow(() -> new NotFoundException("Data not found", "DATA_NOT_FOUND"));
 
-                order.setDeletedAt(java.time.LocalDateTime.now());
+                // soft delete order items
+                List<OrderItem> existingItems = orderItemRepo.findByOrderIdAndDeletedAtIsNull(id);
+                for (OrderItem item : existingItems) {
+                        item.setDeletedAt(java.time.LocalDateTime.now());
+                }
+                orderItemRepo.saveAll(existingItems);
+
+                List<Journal> existingJournals = journalRepo.findAll()
+                                .stream()
+                                .filter(j -> j.getReferenceId() != null
+                                                && j.getReferenceId().equals(order.getId())
+                                                && j.getReferenceType() != null
+                                                && j.getReferenceType().equals(order.getOrderType())
+                                                && j.getDeletedAt() == null)
+                                .toList();
+                for (Journal j : existingJournals) {
+                        java.util.List<JournalDetail> details = journalDetailRepo.findAll()
+                                        .stream()
+                                        .filter(d -> d.getJournal() != null
+                                                        && d.getJournal().getId().equals(j.getId())
+                                                        && d.getDeletedAt() == null)
+                                        .toList();
+                        for (JournalDetail detail : details) {
+                                detail.setDeletedAt(LocalDateTime.now());
+                        }
+                        journalDetailRepo.saveAll(details);
+
+                        // soft delete journal
+                        j.setDeletedAt(LocalDateTime.now());
+                }
+                journalRepo.saveAll(existingJournals);
+
+                // soft delete order
+                order.setDeletedAt(LocalDateTime.now());
                 orderRepo.save(order);
         }
 
