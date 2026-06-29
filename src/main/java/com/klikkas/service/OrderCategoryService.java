@@ -157,6 +157,13 @@ public class OrderCategoryService {
         }
 
         public void updateCategory(UUID id, OrderCategoryRequest req) {
+                // validate user input for name 'kas awal'
+                // return error because user cannot update it
+                if (req.name().toLowerCase().equals("kas awal")) {
+                        throw new BadRequestException("You cannot update category 'kas awal'.");
+                }
+
+                // check tenant id
                 UUID tenantID = TenantContext.getTenantId();
                 OrderCategory category = categoryRepository.findByIdAndDeletedAtIsNullAndTenantId(id, tenantID)
                                 .orElseThrow(() -> new NotFoundException("Data not found", "DATA_NOT_FOUND"));
@@ -188,6 +195,12 @@ public class OrderCategoryService {
                 UUID tenantID = TenantContext.getTenantId();
                 OrderCategory category = categoryRepository.findByIdAndDeletedAtIsNullAndTenantId(id, tenantID)
                                 .orElseThrow(() -> new NotFoundException("Data not found", "DATA_NOT_FOUND"));
+
+                // validate user input for name 'kas awal'
+                // return error because user cannot update it
+                if (category.getName().toLowerCase().equals("kas awal")) {
+                        throw new BadRequestException("You cannot delete category 'kas awal'.");
+                }
 
                 category.setDeletedAt(LocalDateTime.now());
                 categoryRepository.save(category);

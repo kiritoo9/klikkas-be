@@ -9,6 +9,15 @@ public class OrderCategories {
     public static List<CategoryAccountTemplate> get() {
         List<CategoryAccountTemplate> templates = List.of(
 
+                // OPENING BALANCE
+                 new CategoryAccountTemplate(
+                        "Kas Awal",
+                        "Kas Awal",
+                        "kas_masuk",
+                        null,
+                        null 
+                ),
+
                 // KAS MASUK
                 new CategoryAccountTemplate(
                         "Penjualan Produk",

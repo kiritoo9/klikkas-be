@@ -128,6 +128,10 @@ public class AuthService {
         List<CategoryAccountTemplate> templates = OrderCategories.get();
 
         for (CategoryAccountTemplate t : templates) {
+            if (t.debitAccountCode().isBlank() && t.creditAccountCode().isBlank()) {
+                continue;
+            }
+
             OrderCategory c = new OrderCategory();
             c.setTenant(tenant);
 

@@ -20,6 +20,13 @@ public class OrderSpecification {
         return (root, query, cb) -> cb.equal(cb.lower(root.get("orderType")), t.toLowerCase());
     }
 
+    public static Specification<Order> byCategoryName(String categoryName) {
+        return (root, query, cb) -> {
+            Join<Order, OrderCategory> join = root.join("category");
+            return cb.equal(cb.lower(join.get("name")), categoryName);
+        };
+    }
+
     public static Specification<Order> byCategory(UUID categoryID) {
         return (root, query, cb) -> {
             if (categoryID == null) {

@@ -201,6 +201,7 @@ public class OrderService {
 
                 order.setNoOrder(RandomString.randomString(20));
                 order.setOrderDate(DateTimeParser.parseDateOrNow(req.order_date()));
+                order.setOrderType(req.order_type());
                 order.setStatus(req.status());
                 order.setRemark(req.remark());
 
@@ -285,6 +286,9 @@ public class OrderService {
                 }
                 if (req.remark() != null) {
                         order.setRemark(req.remark());
+                }
+                if (req.order_type() != null) {
+                        order.setOrderType(req.order_type());
                 }
 
                 if (req.items() != null && !req.items().isEmpty()) {
