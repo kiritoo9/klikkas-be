@@ -1,9 +1,7 @@
 package com.klikkas.service;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -33,11 +31,12 @@ public class CashFlowService {
                 .where(OrderSpecification.notDeleted())
                 .and(OrderSpecification.byCategoryName("kas awal"));
 
+        String order = "createdAt";
         Page<Order> page = orderRepo
                 .findAll(spec, PageRequest.of(
                         0,
                         1,
-                        Sort.by("createdAt").descending()));
+                        Sort.by(order).descending()));
 
         Order latest = page.hasContent() ? page.getContent().get(0) : null;
         Integer openingBalance = latest != null ? latest.getGrandTotal() : 0;
