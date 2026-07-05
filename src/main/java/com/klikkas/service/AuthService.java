@@ -10,7 +10,9 @@ import org.springframework.stereotype.Service;
 import com.klikkas.data.OrderCategories;
 import com.klikkas.dto.auth.LoginRequest;
 import com.klikkas.dto.auth.LoginResponse;
+import com.klikkas.dto.auth.RefreshTokenRequest;
 import com.klikkas.dto.auth.RegistRequest;
+import com.klikkas.dto.auth.UserLoginResponse;
 import com.klikkas.dto.order_categories.CategoryAccountTemplate;
 import com.klikkas.dto.users.UserResponse;
 import com.klikkas.entity.Account;
@@ -79,12 +81,54 @@ public class AuthService {
         UUID tenantID = userTenant.getTenant().getId();
 
         // generate token
-        String accessToken = jwtService.generateToken(user, tenantID, 1);
-        String refreshToken = jwtService.generateToken(user, tenantID, 14);
+        String accessToken = jwtService.generateToken(user, tenantID, 1, "access");
+        String refreshToken = jwtService.generateToken(user, tenantID, 14, "refresh");
+
+        UserLoginResponse userLogin = new UserLoginResponse(
+                user.getEmail(),
+                user.getFullname(),
+                user.getRole().getName());
 
         return new LoginResponse(
                 accessToken,
-                refreshToken);
+                refreshToken,
+                userLogin);
+    }
+
+    public LoginResponse refreshToken(RefreshTokenRequest request) {
+        // validate token
+        if (!jwtService.validateToken(request.refresh_token())) {
+            throw new BadRequestException("Invalid credential");
+        }
+
+        // check token type
+        String tokenType = jwtService.extractTokenType(request.refresh_token());
+        if (!"refresh".equals(tokenType)) {
+            throw new BadRequestException("Invalid credential");
+        }
+
+        // extract user info from token
+        String email = jwtService.extractEmail(request.refresh_token());
+        UUID tenantID = jwtService.extractTenantID(request.refresh_token());
+
+        // find user
+        User user = userRepository
+                .findByEmailAndDeletedAtIsNull(email)
+                .orElseThrow(() -> new BadRequestException("Invalid credential"));
+
+        // generate new tokens
+        String accessToken = jwtService.generateToken(user, tenantID, 1, "access");
+        String newRefreshToken = jwtService.generateToken(user, tenantID, 14, "refresh");
+
+        UserLoginResponse userLogin = new UserLoginResponse(
+                user.getEmail(),
+                user.getFullname(),
+                user.getRole().getName());
+
+        return new LoginResponse(
+                accessToken,
+                newRefreshToken,
+                userLogin);
     }
 
     @Transactional

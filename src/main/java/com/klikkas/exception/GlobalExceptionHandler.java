@@ -50,4 +50,14 @@ public class GlobalExceptionHandler {
 
     }
 
+    // Route not found handler
+    @ExceptionHandler(org.springframework.web.servlet.NoHandlerFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ErrorResponse handleRouteNotFound(
+            org.springframework.web.servlet.NoHandlerFoundException ex) {
+        return new ErrorResponse(
+                "Route not found",
+                "ROUTE_NOT_FOUND");
+    }
+
 }

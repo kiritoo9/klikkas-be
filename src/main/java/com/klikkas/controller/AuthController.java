@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 import com.klikkas.dto.auth.LoginRequest;
 import com.klikkas.dto.auth.LoginResponse;
+import com.klikkas.dto.auth.RefreshTokenRequest;
 import com.klikkas.dto.auth.RegistRequest;
 import com.klikkas.dto.users.UserResponse;
 import com.klikkas.service.AuthService;
@@ -29,6 +30,12 @@ public class AuthController {
     public UserResponse regist(
             @Valid @RequestBody RegistRequest req) {
         return authService.regist(req);
+    }
+
+    @PostMapping("/refresh_token")
+    public LoginResponse refreshToken(
+            @Valid @RequestBody RefreshTokenRequest req) {
+        return authService.refreshToken(req);
     }
 
 }

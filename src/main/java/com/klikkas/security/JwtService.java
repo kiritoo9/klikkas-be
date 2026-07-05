@@ -17,82 +17,96 @@ import io.jsonwebtoken.security.Keys;
 @Service
 public class JwtService {
 
-    @Value("${jwt.secret}")
-    private String secret;
+        @Value("${jwt.secret}")
+        private String secret;
 
-    public String generateToken(
-            User user,
-            UUID tenantID,
-            Integer expiration) {
+        public String generateToken(
+                        User user,
+                        UUID tenantID,
+                        Integer expiration,
+                        String tokenType) {
 
-        SecretKey key = Keys.hmacShaKeyFor(
-                secret.getBytes(StandardCharsets.UTF_8));
+                SecretKey key = Keys.hmacShaKeyFor(
+                                secret.getBytes(StandardCharsets.UTF_8));
 
-        return Jwts.builder()
-                .subject(user.getEmail())
-                .claim("id", user.getId())
-                .claim("role", user.getRole() != null ? user.getRole().getName() : null)
-                .claim("tenantID", tenantID)
-                .issuedAt(new Date())
-                .expiration(
-                        new Date(System.currentTimeMillis() + (86400000L * expiration)))
-                .signWith(key)
-                .compact();
+                return Jwts.builder()
+                                .subject(user.getEmail())
+                                .claim("id", user.getId())
+                                .claim("role", user.getRole() != null ? user.getRole().getName() : null)
+                                .claim("tenantID", tenantID)
+                                .claim("type", tokenType)
+                                .issuedAt(new Date())
+                                .expiration(
+                                                new Date(System.currentTimeMillis() + (86400000L * expiration)))
+                                .signWith(key)
+                                .compact();
 
-    }
-
-    public boolean validateToken(String token) {
-        try {
-            SecretKey key = Keys.hmacShaKeyFor(
-                    secret.getBytes(StandardCharsets.UTF_8));
-
-            Jwts.parser()
-                    .verifyWith(key)
-                    .build()
-                    .parseSignedClaims(token);
-
-            return true;
-        } catch (Exception e) {
-            return false;
         }
-    }
 
-    public String extractEmail(String token) {
-        SecretKey key = Keys.hmacShaKeyFor(
-                secret.getBytes(StandardCharsets.UTF_8));
+        public boolean validateToken(String token) {
+                try {
+                        SecretKey key = Keys.hmacShaKeyFor(
+                                        secret.getBytes(StandardCharsets.UTF_8));
 
-        return Jwts.parser()
-                .verifyWith(key)
-                .build()
-                .parseSignedClaims(token)
-                .getPayload()
-                .getSubject();
-    }
+                        Jwts.parser()
+                                        .verifyWith(key)
+                                        .build()
+                                        .parseSignedClaims(token);
 
-    public String extractRole(String token) {
-        SecretKey key = Keys.hmacShaKeyFor(
-                secret.getBytes(StandardCharsets.UTF_8));
+                        return true;
+                } catch (Exception e) {
+                        return false;
+                }
+        }
 
-        return Jwts.parser()
-                .verifyWith(key)
-                .build()
-                .parseSignedClaims(token)
-                .getPayload()
-                .get("role", String.class);
-    }
+        public String extractEmail(String token) {
+                SecretKey key = Keys.hmacShaKeyFor(
+                                secret.getBytes(StandardCharsets.UTF_8));
 
-    public UUID extractTenantID(String token) {
-        SecretKey key = Keys.hmacShaKeyFor(
-                secret.getBytes(StandardCharsets.UTF_8));
+                return Jwts.parser()
+                                .verifyWith(key)
+                                .build()
+                                .parseSignedClaims(token)
+                                .getPayload()
+                                .getSubject();
+        }
 
-        String tenantID = Jwts.parser()
-                .verifyWith(key)
-                .build()
-                .parseSignedClaims(token)
-                .getPayload()
-                .get("tenantID", String.class);
+        public String extractRole(String token) {
+                SecretKey key = Keys.hmacShaKeyFor(
+                                secret.getBytes(StandardCharsets.UTF_8));
 
-        return UUID.fromString(tenantID);
-    }
+                return Jwts.parser()
+                                .verifyWith(key)
+                                .build()
+                                .parseSignedClaims(token)
+                                .getPayload()
+                                .get("role", String.class);
+        }
+
+        public UUID extractTenantID(String token) {
+                SecretKey key = Keys.hmacShaKeyFor(
+                                secret.getBytes(StandardCharsets.UTF_8));
+
+                String tenantID = Jwts.parser()
+                                .verifyWith(key)
+                                .build()
+                                .parseSignedClaims(token)
+                                .getPayload()
+                                .get("tenantID", String.class);
+
+                return UUID.fromString(tenantID);
+        }
+
+        public String extractTokenType(String token) {
+                SecretKey key = Keys.hmacShaKeyFor(
+                                secret.getBytes(StandardCharsets.UTF_8));
+
+                return Jwts.parser()
+                                .verifyWith(key)
+                                .build()
+                                .parseSignedClaims(token)
+                                .getPayload()
+                                .get("type", String.class);
+        }
 
 }
