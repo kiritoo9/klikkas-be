@@ -18,6 +18,8 @@ import org.springframework.stereotype.Service;
 import com.klikkas.dto.cashflows.CashflowAccountDetail;
 import com.klikkas.dto.cashflows.CashflowDetailResponse;
 import com.klikkas.dto.cashflows.CashflowListResponse;
+import com.klikkas.dto.cashflows.LabaRugiAccountItem;
+import com.klikkas.dto.cashflows.LabaRugiResponse;
 import com.klikkas.dto.cashflows.SummarizeResponse;
 import com.klikkas.entity.Order;
 import com.klikkas.repository.JournalDetailRepository;
@@ -147,6 +149,34 @@ public class CashFlowService {
                 }
 
                 return result;
+        }
+
+        public LabaRugiResponse getLabaRugi(
+                        LocalDate dateFrom,
+                        LocalDate dateTo) {
+
+                LocalDateTime startDate = dateFrom.atStartOfDay();
+                LocalDateTime endDate = dateTo.atTime(LocalTime.MAX);
+
+                List<LabaRugiAccountItem> pendapatanList = journalDetailRepo.getRevenueAccounts(startDate, endDate);
+                List<LabaRugiAccountItem> bebanList = journalDetailRepo.getExpenseAccounts(startDate, endDate);
+
+                Long totalPendapatan = pendapatanList.stream()
+                                .mapToLong(LabaRugiAccountItem::amount)
+                                .sum();
+
+                Long totalBeban = bebanList.stream()
+                                .mapToLong(LabaRugiAccountItem::amount)
+                                .sum();
+
+                Long labaBersih = totalPendapatan - totalBeban;
+
+                return new LabaRugiResponse(
+                                pendapatanList,
+                                totalPendapatan,
+                                bebanList,
+                                totalBeban,
+                                labaBersih);
         }
 
 }

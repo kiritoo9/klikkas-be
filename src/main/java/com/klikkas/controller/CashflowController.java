@@ -3,6 +3,7 @@ package com.klikkas.controller;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.klikkas.dto.cashflows.CashflowListResponse;
+import com.klikkas.dto.cashflows.LabaRugiResponse;
 import com.klikkas.dto.cashflows.SummarizeResponse;
 import com.klikkas.service.CashFlowService;
 
@@ -36,5 +37,11 @@ public class CashflowController {
     ) {
         return cashflow.getCashflowList(dateFrom, dateTo);
     }
-    
+    @GetMapping("/cashflow/laba_rugi")
+    public LabaRugiResponse getLabaRugi(
+        @RequestParam(required = true) LocalDate dateFrom,
+        @RequestParam(required = true) LocalDate dateTo
+    ) {
+        return cashflow.getLabaRugi(dateFrom, dateTo);
+    }    
 }
