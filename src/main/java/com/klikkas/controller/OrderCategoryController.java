@@ -34,8 +34,8 @@ public class OrderCategoryController {
             @RequestParam(defaultValue = "10") Integer limit,
             @RequestParam(defaultValue = "createdAt", required = false) String order,
             @RequestParam(defaultValue = "desc", required = false) String dir,
-            @RequestParam(required = false) String keywords,
-            @RequestParam(required = false) String categoryType) {
+            @RequestParam(defaultValue = "", required = false) String categoryType,
+            @RequestParam(required = false) String keywords) {
         return categoryService.getCategories(page, limit, order, dir, keywords, categoryType);
     }
 
