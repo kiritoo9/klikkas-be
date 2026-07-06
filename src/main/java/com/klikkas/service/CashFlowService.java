@@ -2,6 +2,7 @@ package com.klikkas.service;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.UUID;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Service;
 import com.klikkas.dto.cashflows.SummarizeResponse;
 import com.klikkas.entity.Order;
 import com.klikkas.repository.OrderRepository;
+import com.klikkas.security.TenantContext;
 import com.klikkas.specification.OrderSpecification;
 
 import lombok.RequiredArgsConstructor;
@@ -20,45 +22,50 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class CashFlowService {
 
-    private final OrderRepository orderRepo;
+        private final OrderRepository orderRepo;
 
-    public SummarizeResponse getSummarize(
-            LocalDate dateFrom,
-            LocalDate dateTo) {
+        public SummarizeResponse getSummarize(
+                        LocalDate dateFrom,
+                        LocalDate dateTo) {
 
-        // get opening balance
-        Specification<Order> spec = Specification
-                .where(OrderSpecification.notDeleted())
-                .and(OrderSpecification.byCategoryName("kas awal"));
+                UUID tenantID = TenantContext.getTenantId();
 
-        String order = "createdAt";
-        Page<Order> page = orderRepo
-                .findAll(spec, PageRequest.of(
-                        0,
-                        1,
-                        Sort.by(order).descending()));
+                // get opening balance
+                Specification<Order> spec = Specification
+                                .where(OrderSpecification.notDeleted())
+                                .and(OrderSpecification.byTenant(tenantID))
+                                .and(OrderSpecification.byCategoryName("kas awal"));
 
-        Order latest = page.hasContent() ? page.getContent().get(0) : null;
-        Integer openingBalance = latest != null ? latest.getGrandTotal() : 0;
+                String order = "createdAt";
+                Page<Order> page = orderRepo
+                                .findAll(spec, PageRequest.of(
+                                                0,
+                                                1,
+                                                Sort.by(order).descending()));
 
-        // get summarize cash by range date
-        Integer grandTotalIN = orderRepo.sumCashFlow(
-                dateFrom.atStartOfDay(),
-                dateTo.atTime(LocalTime.MAX),
-                "kas_masuk");
+                Order latest = page.hasContent() ? page.getContent().get(0) : null;
+                Integer openingBalance = latest != null ? latest.getGrandTotal() : 0;
 
-        Integer grandTotalOUT = orderRepo.sumCashFlow(
-                dateFrom.atStartOfDay(),
-                dateTo.atTime(LocalTime.MAX),
-                "kas_keluar");
+                // get summarize cash by range date
+                Integer grandTotalIN = orderRepo.sumCashFlow(
+                                tenantID,
+                                dateFrom.atStartOfDay(),
+                                dateTo.atTime(LocalTime.MAX),
+                                "kas_masuk");
 
-        Integer increasingAmount = grandTotalIN - grandTotalOUT;
-        Integer finalCash = openingBalance + increasingAmount;
+                Integer grandTotalOUT = orderRepo.sumCashFlow(
+                                tenantID,
+                                dateFrom.atStartOfDay(),
+                                dateTo.atTime(LocalTime.MAX),
+                                "kas_keluar");
 
-        return new SummarizeResponse(
-                openingBalance,
-                increasingAmount,
-                finalCash);
-    }
+                Integer increasingAmount = grandTotalIN - grandTotalOUT;
+                Integer finalCash = openingBalance + increasingAmount;
+
+                return new SummarizeResponse(
+                                openingBalance,
+                                increasingAmount,
+                                finalCash);
+        }
 
 }

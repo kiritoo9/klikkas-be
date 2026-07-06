@@ -24,12 +24,14 @@ public interface OrderRepository extends
                             SELECT COALESCE(SUM(o.grandTotal), 0)
                             FROM Order o
                             WHERE o.deletedAt IS NULL
+                                AND o.tenant.id = :tenantID
                                 AND o.orderDate BETWEEN :startDate AND :endDate
                                 AND LOWER(o.orderType) = :orderType
                                 AND LOWER(o.category.name) != 'kas awal'
                                 AND LOWER(o.status) = 'paid'
                         """)
         Integer sumCashFlow(
+                        UUID tenantID,
                         LocalDateTime startDate,
                         LocalDateTime endDate,
                         String orderType);
@@ -38,6 +40,7 @@ public interface OrderRepository extends
                             SELECT COALESCE(SUM(o.grandTotal), 0)
                             FROM Order o
                             WHERE o.deletedAt IS NULL
+                                AND o.tenant.id = :tenantID
                                 AND o.orderDate >= :startDate
                                 AND o.orderDate < :endDate
                                 AND LOWER(o.orderType) = :orderType
@@ -45,6 +48,7 @@ public interface OrderRepository extends
                                 AND LOWER(o.status) = 'paid'
                         """)
         Integer sumDashboard(
+                        UUID tenantID,
                         LocalDateTime startDate,
                         LocalDateTime endDate,
                         String orderType);
@@ -56,6 +60,7 @@ public interface OrderRepository extends
                         o.orderType AS order_type
                         FROM Order o
                         WHERE o.deletedAt IS NULL
+                        AND o.tenant.id = :tenantID
                         AND o.orderDate >= :startDate
                         AND o.orderDate < :endDate
                         AND LOWER(o.category.name) != 'kas awal'
@@ -63,6 +68,7 @@ public interface OrderRepository extends
                         GROUP BY o.orderDate, o.orderType
                         """)
         List<LatestWeekGraphResponse> getLastestWeekGraph(
+                        UUID tenantID,
                         LocalDateTime startDate,
                         LocalDateTime endDate);
 
@@ -76,8 +82,9 @@ public interface OrderRepository extends
                         )
                         FROM Order o
                         WHERE o.deletedAt IS NULL
+                        AND o.tenant.id = :tenantID
                         ORDER BY o.createdAt DESC
                         """)
-        List<CurrentActivity> findLatest(Pageable pageable);
+        List<CurrentActivity> findLatest(UUID tenantID, Pageable pageable);
 
 }

@@ -14,8 +14,8 @@ public class OrderCategories {
                         "Kas Awal",
                         "Kas Awal",
                         "kas_masuk",
-                        null,
-                        null 
+                        "",
+                        "" 
                 ),
 
                 // KAS MASUK
