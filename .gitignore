@@ -34,3 +34,4 @@ build/
 
 # private enviroment
 SET_ENV.sh
+.env

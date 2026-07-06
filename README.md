@@ -46,7 +46,7 @@ export DB_USER=your_user
 export DB_PASS=your_password
 export JWT_SECRET=your-256-bit-secret-key-here-min-32-chars
 export APP_NAME=klikkas
-export APP_PORT=8080
+export APP_PORT=5001
 ```
 Or you can create with <code>.sh</code> file.
 
@@ -76,7 +76,7 @@ CREATE DATABASE klikkas;
 ./mvnw spring-boot:run
 ```
 
-The API will be available at `http://localhost:8080`
+The API will be available at `http://localhost:5001`
 
 ### Build and Run JAR
 
@@ -90,7 +90,7 @@ java -jar target/klikkas-0.0.1-SNAPSHOT.jar
 ### Login
 
 ```bash
-curl -X POST http://localhost:8080/login \
+curl -X POST http://localhost:5001/login \
   -H "Content-Type: application/json" \
   -d '{"email": "user@example.com", "password": "password123"}'
 ```
@@ -106,14 +106,14 @@ curl -X POST http://localhost:8080/login \
 ### Access Protected Endpoint
 
 ```bash
-curl http://localhost:8080/users \
+curl http://localhost:5001/users \
   -H "Authorization: Bearer <your_access_token>"
 ```
 
 ### Health Check (No Auth Required)
 
 ```bash
-curl http://localhost:8080/healthcheck
+curl http://localhost:5001/healthcheck
 ```
 
 ## Environment Variables
@@ -127,7 +127,74 @@ curl http://localhost:8080/healthcheck
 | `DB_PASS` | Database password | - |
 | `JWT_SECRET` | JWT signing secret (min 32 chars) | - |
 | `APP_NAME` | Application name | `klikkas` |
-| `APP_PORT` | Server port | `8080` |
+| `APP_PORT` | Server port | `5001` |
+
+## Docker Deployment
+
+### Prerequisites
+
+- **Docker** and **Docker Compose**
+
+### Quick Start
+
+```bash
+# 1. Copy environment template
+cp .env.example .env
+
+# 2. Edit .env with your production values
+vim .env
+
+# 3. Start the application
+docker-compose up -d
+```
+
+The API will be available at `http://localhost:5001`
+
+### Docker Commands
+
+```bash
+# Start services
+docker-compose up -d
+
+# View logs
+docker-compose logs -f app
+
+# Stop services
+docker-compose down
+
+# Rebuild without cache
+docker-compose build --no-cache
+
+# Rebuild and restart
+docker-compose up -d --build
+```
+
+### Environment File (.env)
+
+Create a `.env` file in the project root with these variables:
+
+```bash
+APP_NAME=klikkas
+APP_PORT=5001
+
+DB_HOST=db
+DB_USER=your_db_user
+DB_PASS=your_secure_password
+DB_NAME=klikkas
+DB_PORT=5432
+
+JWT_SECRET=your_secure_jwt_secret_minimum_32_characters
+```
+
+> **Note:** The `.env` file is gitignored. Never commit secrets to version control.
+
+### Production Tips
+
+- Use strong passwords and JWT secrets
+- Consider using Docker secrets for sensitive data in Swarm mode
+- Enable HTTPS with a reverse proxy (nginx, traefik)
+- Set up regular database backups
+- Monitor container health with `docker-compose ps`
 
 ## Common Issues
 
