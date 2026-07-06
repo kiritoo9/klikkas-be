@@ -36,8 +36,8 @@ public class OrderController {
             @RequestParam(defaultValue = "createdAt", required = false) String order,
             @RequestParam(defaultValue = "desc", required = false) String dir,
             @RequestParam(required = false) String keywords,
-            @RequestParam(required = false) UUID categoryId) {
-        return orderService.getOrders(page, limit, orderType, order, dir, keywords, categoryId);
+            @RequestParam(required = false) UUID categoryID) {
+        return orderService.getOrders(page, limit, orderType, order, dir, keywords, categoryID);
     }
 
     @GetMapping("/orders/{id}")

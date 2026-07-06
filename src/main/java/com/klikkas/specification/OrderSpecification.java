@@ -53,7 +53,7 @@ public class OrderSpecification {
 
             String like = "%" + k.toLowerCase() + "%";
             return cb.or(
-                    cb.like(cb.lower(root.get("no_order")), like),
+                    cb.like(cb.lower(root.get("noOrder")), like),
                     cb.like(cb.lower(root.get("remark")), like));
         };
     }

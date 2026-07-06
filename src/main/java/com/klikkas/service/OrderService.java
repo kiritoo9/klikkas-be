@@ -77,6 +77,7 @@ public class OrderService {
                                 new OrderResponse(
                                                 order.getId(),
                                                 order.getCategory().getId(),
+                                                order.getCategory().getName(),
                                                 order.getOrderType(),
 
                                                 order.getNoOrder(),
@@ -119,7 +120,8 @@ public class OrderService {
                                 .where(OrderSpecification.notDeleted())
                                 .and(OrderSpecification.byTenant(tenantID))
                                 .and(OrderSpecification.byType(orderType))
-                                .and(OrderSpecification.byCategory(categoryID));
+                                .and(OrderSpecification.byCategory(categoryID))
+                                .and(OrderSpecification.keyword(keywords));
 
                 Page<Order> result = orderRepo.findAll(spec, pageable);
 
@@ -129,6 +131,7 @@ public class OrderService {
                                 .map(o -> new OrderResponse(
                                                 o.getId(),
                                                 o.getCategory().getId(),
+                                                o.getCategory().getName(),
                                                 o.getOrderType(),
 
                                                 o.getNoOrder(),
