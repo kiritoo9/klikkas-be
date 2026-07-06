@@ -10,7 +10,7 @@ public class OrderCategories {
         List<CategoryAccountTemplate> templates = List.of(
 
                 // OPENING BALANCE
-                 new CategoryAccountTemplate(
+                new CategoryAccountTemplate(
                         "Kas Awal",
                         "Kas Awal",
                         "kas_masuk",
