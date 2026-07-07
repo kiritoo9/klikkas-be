@@ -25,6 +25,9 @@ FROM eclipse-temurin:21-jre-alpine
 
 WORKDIR /app
 
+# Install Tesseract OCR and Indonesian language data
+RUN apk add --no-cache tesseract-ocr tesseract-ocr-data-ind
+
 # Create non-root user
 RUN addgroup -S klikkas && adduser -S klikkas -G klikkas
 
