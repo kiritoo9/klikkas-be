@@ -35,7 +35,7 @@ public class UserTokenService {
 
         Integer limitToken = 0;
         Integer usageToken = 0;
-        Integer estimatedCost = 0;
+        Double estimatedCost = 0.0;
         LocalDateTime resetAt = null;
 
         UserToken userToken = userTokenRepository.findByUserId(userID);
@@ -82,7 +82,7 @@ public class UserTokenService {
                 pageable);
 
         List<TokenUsages> tokenUsages = result.getContent().stream().map(usage -> {
-            Integer estimatedCost = calculateEstimatedCost(usage.getInput_token() + usage.getOutput_token());
+            Double estimatedCost = calculateEstimatedCost(usage.getInput_token() + usage.getOutput_token());
 
             return new TokenUsages(
                     usage.getUsage_title(),
@@ -99,16 +99,13 @@ public class UserTokenService {
                 result.getTotalPages());
     }
 
-    private Integer calculateEstimatedCost(Integer usageToken) {
-        Integer estimatedCost = 0;
-
+    private Double calculateEstimatedCost(Integer usageToken) {
         // calculate estimate
         // use static price for now
         Integer maxToken = 150_000_000;
         Integer cost = 4 * 18_000; // USD * IDR
-        Integer costPerToken = cost / maxToken;
-        estimatedCost = usageToken * costPerToken;
+        Double costPerToken = (double) cost / maxToken;
 
-        return estimatedCost;
+        return usageToken * costPerToken;
     }
 }

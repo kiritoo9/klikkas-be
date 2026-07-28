@@ -40,6 +40,10 @@ import com.klikkas.repository.UserRepository;
 import com.klikkas.repository.UserTenantRepository;
 import com.klikkas.repository.UserTokenRepository;
 import com.klikkas.security.JwtService;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
+import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.api.client.json.gson.GsonFactory;
 import com.klikkas.util.RandomString;
 
 import jakarta.transaction.Transactional;
@@ -63,29 +67,57 @@ public class AuthService {
     public final JwtService jwtService;
     public final PasswordEncoder passwordEncoder;
 
-    private Boolean checkGoogleOAuth(String idToken) {
-        return false;
+    private GoogleIdToken.Payload verifyGoogleToken(String googleID) {
+        if (googleID == null || googleID.isBlank()) {
+            return null;
+        }
+        try {
+            GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(
+                    new NetHttpTransport(),
+                    GsonFactory.getDefaultInstance())
+                    .build();
+            GoogleIdToken idToken = verifier.verify(googleID);
+            if (idToken != null) {
+                return idToken.getPayload();
+            }
+            return null;
+        } catch (Exception e) {
+            System.out.println("Google OAuth verification failed: " + e.getMessage());
+            return null;
+        }
     }
 
     public LoginResponse login(LoginRequest request) {
+        User user;
+
         // check if user login using google.id_token
-        if (request.id_token() != "" || !request.id_token().isBlank()) {
-            Boolean isOAuth = checkGoogleOAuth(request.id_token());
-            System.out.println("User login with OAuth: " + isOAuth);
-        }
+        if (request.google_id() != null && !request.google_id().isBlank()) {
+            GoogleIdToken.Payload payload = verifyGoogleToken(request.google_id());
+            if (payload == null) {
+                throw new BadRequestException("Invalid Google ID token");
+            }
+            // Get the 'sub' claim from verified token
+            String googleSub = payload.getSubject();
+            // Find user by googleSub (sub claim)
+            user = userRepository.findByGoogleIdAndDeletedAtIsNull(googleSub)
+                    .orElseThrow(() -> new NotFoundException(
+                            "User not found with this Google account",
+                            "INVALID_CREDENTIAL"));
+        } else {
+            // Regular email/password login
+            user = userRepository
+                    .findByEmailAndDeletedAtIsNull(request.email())
+                    .orElseThrow(() -> new NotFoundException(
+                            "Invalid credential",
+                            "INVALID_CREDENTIAL"));
 
-        User user = userRepository
-                .findByEmailAndDeletedAtIsNull(request.email())
-                .orElseThrow(() -> new NotFoundException(
-                        "Invalid credential",
-                        "INVALID_CREDENTIAL"));
+            boolean validPassword = passwordEncoder.matches(
+                    request.password(),
+                    user.getPassword());
 
-        boolean validPassword = passwordEncoder.matches(
-                request.password(),
-                user.getPassword());
-
-        if (!validPassword) {
-            throw new BadRequestException("Invalid credential");
+            if (!validPassword) {
+                throw new BadRequestException("Invalid credential");
+            }
         }
 
         // get user tenant
@@ -181,6 +213,26 @@ public class AuthService {
 
     @Transactional
     public UserResponse regist(RegistRequest req) {
+        String googleSub = null;
+        
+        // Check if google_id is provided for OAuth registration
+        if (req.google_id() != null && !req.google_id().isBlank()) {
+            // Verify Google ID token and extract the 'sub' claim
+            GoogleIdToken.Payload payload = verifyGoogleToken(req.google_id());
+            if (payload == null) {
+                throw new BadRequestException("Invalid Google ID token");
+            }
+            
+            // Get the 'sub' claim (unique Google user ID)
+            googleSub = payload.getSubject();
+            
+            // For Google OAuth, verify email in the token matches the request
+            String googleEmail = payload.getEmail();
+            if (!googleEmail.equals(req.email())) {
+                throw new BadRequestException("Email mismatch with Google account");
+            }
+        }
+
         if (userRepository.existsByEmailAndDeletedAtIsNull(req.email())) {
             throw new BadRequestException("Email already taken");
         }
@@ -200,6 +252,8 @@ public class AuthService {
         user.setFullname(req.fullname());
         user.setPhone(req.phone());
         user.setAddress(req.address());
+        // Store the 'sub' claim (Google user ID) instead of the id_token
+        user.setGoogleId(googleSub);
         user = userRepository.save(user);
 
         Tenant tenant = new Tenant();

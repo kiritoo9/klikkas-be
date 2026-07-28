@@ -7,6 +7,6 @@ public record TokenUsages(
     String llm_model,
     Integer input_token,
     Integer output_token,
-    Integer estimated_cost,
+    Double estimated_cost,
     LocalDateTime created_at
 ) {}

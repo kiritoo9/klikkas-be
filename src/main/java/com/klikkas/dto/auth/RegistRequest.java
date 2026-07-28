@@ -14,5 +14,7 @@ public record RegistRequest(
     String password,
 
     String phone,
-    String address
+    String address,
+
+    String google_id
 ) {}

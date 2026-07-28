@@ -9,8 +9,7 @@ public record LoginRequest(
     @Email(message = "Format email invalid")
     String email,
 
-    @NotBlank(message = "Password is required")
     String password,
 
-    String id_token
+    String google_id
 ) {}

@@ -5,6 +5,6 @@ import java.time.LocalDateTime;
 public record UserSummary(
     Integer limit_token,
     Integer usage_token,
-    Integer estimated_cost,
+    Double estimated_cost,
     LocalDateTime reset_at
 ) {}

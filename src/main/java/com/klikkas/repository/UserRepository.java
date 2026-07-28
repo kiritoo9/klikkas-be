@@ -34,7 +34,7 @@ public interface UserRepository extends
                         UUID id);
 
         boolean existsByIdAndDeletedAtIsNull(UUID id);
-
+    Optional<User> findByGoogleIdAndDeletedAtIsNull(String googleId);
         @EntityGraph(attributePaths = {"role"})
         Page<User> findAll(Specification<User> spec, Pageable pageable);
 }

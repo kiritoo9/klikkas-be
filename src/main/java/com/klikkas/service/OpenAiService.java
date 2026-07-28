@@ -119,9 +119,10 @@ public class OpenAiService {
             tokenUsage.setUsage_title(title);
             tokenUsage.setLlm_model(openAiModel);
             tokenUsage.setInput_token(promptTokens);
-            tokenUsage.setInput_token(completionTokens);
+            tokenUsage.setOutput_token(completionTokens);
             tokenUsage.setResponse_body(
                     objectMapper.writeValueAsString(response.getBody()));
+            tokenUsage.setCreatedAt(LocalDateTime.now());
             tokenUsage = userTokenUsageRepository.save(tokenUsage);
 
             // update user token summary
