@@ -1,7 +1,9 @@
 package com.klikkas.service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -17,18 +19,26 @@ import com.klikkas.dto.order_categories.CategoryAccountTemplate;
 import com.klikkas.dto.users.UserResponse;
 import com.klikkas.entity.Account;
 import com.klikkas.entity.OrderCategory;
+import com.klikkas.entity.Packages;
 import com.klikkas.entity.Role;
 import com.klikkas.entity.Tenant;
 import com.klikkas.entity.User;
+import com.klikkas.entity.UserAgent;
+import com.klikkas.entity.UserPackage;
 import com.klikkas.entity.UserTenant;
+import com.klikkas.entity.UserToken;
 import com.klikkas.exception.BadRequestException;
 import com.klikkas.exception.NotFoundException;
 import com.klikkas.repository.AccountRepository;
 import com.klikkas.repository.OrderCategoryRepository;
+import com.klikkas.repository.PackageRepository;
 import com.klikkas.repository.RoleRepository;
 import com.klikkas.repository.TenantRepository;
+import com.klikkas.repository.UserAgentRepository;
+import com.klikkas.repository.UserPackageRepository;
 import com.klikkas.repository.UserRepository;
 import com.klikkas.repository.UserTenantRepository;
+import com.klikkas.repository.UserTokenRepository;
 import com.klikkas.security.JwtService;
 import com.klikkas.util.RandomString;
 
@@ -45,6 +55,10 @@ public class AuthService {
     public final UserTenantRepository userTenantRepository;
     public final AccountRepository accountRepository;
     public final OrderCategoryRepository categoryRepository;
+    public final PackageRepository packageRepository;
+    public final UserPackageRepository userPackageRepository;
+    public final UserAgentRepository userAgentRepository;
+    public final UserTokenRepository userTokenRepository;
 
     public final JwtService jwtService;
     public final PasswordEncoder passwordEncoder;
@@ -79,6 +93,40 @@ public class AuthService {
                 .orElseThrow(() -> new BadRequestException("Invalid credential"));
 
         UUID tenantID = userTenant.getTenant().getId();
+
+        // check available user package
+        // if not exists, create free tier package for this user
+        Optional<UserPackage> existsUserPackage = userPackageRepository.findByUserIdAndDeletedAtIsNull(user.getId());
+        if (!existsUserPackage.isPresent()) {
+            Packages pack = packageRepository.findByCodeAndDeletedAtIsNull("STR1")
+                .orElseThrow(() -> new BadRequestException("Something went wrong"));
+
+            // create default value for user package
+            UserPackage userPackage = new UserPackage();
+            userPackage.setUser(user);
+            userPackage.setPackages(pack);
+            userPackage.setIs_active(true);
+            userPackage.setRemark("Free tier");
+            userPackage.setStart_at(LocalDateTime.now());
+            userPackage = userPackageRepository.save(userPackage);
+
+            // create default value for user agent and user token
+            UserAgent userAgent = new UserAgent();
+            userAgent.setUser(user);
+            userAgent.setName("Personal Assistant");
+            userAgent.setShortname("-");
+            userAgent.setLang("id-ID");
+            userAgent.setTone("professional");
+            userAgent = userAgentRepository.save(userAgent);
+
+            // create default value for user token
+            UserToken userToken = new UserToken();
+            userToken.setUser(user);
+            userToken.setLimit_token(1_000_000);
+            userToken.setUsage_token(0);
+            userToken.setReset_at(LocalDateTime.now().plusMonths(1));
+            userToken = userTokenRepository.save(userToken);
+        }
 
         // generate token
         String accessToken = jwtService.generateToken(user, tenantID, 1, "access");
@@ -140,6 +188,9 @@ public class AuthService {
         Role role = roleRepository.findByNameAndDeletedAtIsNull("user")
                 .orElseThrow(() -> new BadRequestException("Something went wrong"));
 
+        Packages pack = packageRepository.findByCodeAndDeletedAtIsNull("STR1")
+                .orElseThrow(() -> new BadRequestException("Something went wrong"));
+
         // prepare data
         User user = new User();
 
@@ -166,6 +217,32 @@ public class AuthService {
         userTenant.setTenant(tenant);
         userTenant.setRemark("created-automatically");
         userTenant = userTenantRepository.save(userTenant);
+
+        // create default value for user package
+        UserPackage userPackage = new UserPackage();
+        userPackage.setUser(user);
+        userPackage.setPackages(pack);
+        userPackage.setIs_active(true);
+        userPackage.setRemark("Free tier");
+        userPackage.setStart_at(LocalDateTime.now());
+        userPackage = userPackageRepository.save(userPackage);
+
+        // create default value for user agent and user token
+        UserAgent userAgent = new UserAgent();
+        userAgent.setUser(user);
+        userAgent.setName("Personal Assistant");
+        userAgent.setShortname("-");
+        userAgent.setLang("id-ID");
+        userAgent.setTone("professional");
+        userAgent = userAgentRepository.save(userAgent);
+
+        // create default value for user token
+        UserToken userToken = new UserToken();
+        userToken.setUser(user);
+        userToken.setLimit_token(1_000_000);
+        userToken.setUsage_token(0);
+        userToken.setReset_at(LocalDateTime.now().plusMonths(1));
+        userToken = userTokenRepository.save(userToken);
 
         // add default data for order category
         List<OrderCategory> categories = new ArrayList<>();

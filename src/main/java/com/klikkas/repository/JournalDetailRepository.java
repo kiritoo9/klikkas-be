@@ -49,14 +49,17 @@ public interface JournalDetailRepository extends
                 FROM JournalDetail jd
                 JOIN jd.journal jr
                 JOIN jd.account a
+                JOIN Order o ON o.id = jr.referenceId
                 WHERE jr.deletedAt IS NULL
                         AND jd.deletedAt IS NULL
                         AND a.deletedAt IS NULL
                         AND a.code LIKE '4%'
+                        AND o.tenant.id = :tenantID
                         AND jr.journalDate BETWEEN :startDate AND :endDate
                 GROUP BY a.code, a.name
                 """)
         List<LabaRugiAccountItem> getRevenueAccounts(
+                        UUID tenantID,
                         LocalDateTime startDate,
                         LocalDateTime endDate);
 
@@ -69,14 +72,17 @@ public interface JournalDetailRepository extends
                 FROM JournalDetail jd
                 JOIN jd.journal jr
                 JOIN jd.account a
+                JOIN Order o ON o.id = jr.referenceId
                 WHERE jr.deletedAt IS NULL
                         AND jd.deletedAt IS NULL
                         AND a.deletedAt IS NULL
                         AND a.code LIKE '5%'
+                        AND o.tenant.id = :tenantID
                         AND jr.journalDate BETWEEN :startDate AND :endDate
                 GROUP BY a.code, a.name
                 """)
         List<LabaRugiAccountItem> getExpenseAccounts(
+                        UUID tenantID,
                         LocalDateTime startDate,
                         LocalDateTime endDate);
 }

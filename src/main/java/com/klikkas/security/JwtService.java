@@ -97,6 +97,20 @@ public class JwtService {
                 return UUID.fromString(tenantID);
         }
 
+        public UUID extractUserID(String token) {
+                SecretKey key = Keys.hmacShaKeyFor(
+                                secret.getBytes(StandardCharsets.UTF_8));
+
+                String userID = Jwts.parser()
+                                .verifyWith(key)
+                                .build()
+                                .parseSignedClaims(token)
+                                .getPayload()
+                                .get("id", String.class);
+
+                return UUID.fromString(userID);
+        }
+
         public String extractTokenType(String token) {
                 SecretKey key = Keys.hmacShaKeyFor(
                                 secret.getBytes(StandardCharsets.UTF_8));

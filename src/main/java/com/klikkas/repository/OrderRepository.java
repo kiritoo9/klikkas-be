@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 
+import com.klikkas.dto.cashflows.SumByCategory;
 import com.klikkas.dto.dashboards.CurrentActivity;
 import com.klikkas.dto.dashboards.LatestWeekGraphResponse;
 import com.klikkas.entity.Order;
@@ -86,5 +87,25 @@ public interface OrderRepository extends
                         ORDER BY o.createdAt DESC
                         """)
         List<CurrentActivity> findLatest(UUID tenantID, Pageable pageable);
+
+        @Query("""
+                        SELECT new com.klikkas.dto.cashflows.SumByCategory(
+                                sum(o.grandTotal),
+                                o.orderType,
+                                c.name
+                        )
+                        FROM Order o
+                        JOIN o.category c
+                        WHERE o.deletedAt IS NULL
+                                AND o.tenant.id = :tenantID
+                                AND LOWER(c.name) != 'kas awal'
+                                AND LOWER(o.status) = 'paid'
+                                AND o.orderDate BETWEEN :startDate AND :endDate
+                        GROUP BY c.name, o.orderType
+                        """)
+        List<SumByCategory> getSumOrderByCategory(
+                        UUID tenantID,
+                        LocalDateTime startDate,
+                        LocalDateTime endDate);
 
 }

@@ -42,8 +42,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 String email = jwtService.extractEmail(token);
                 String role = jwtService.extractRole(token);
                 UUID tenantID = jwtService.extractTenantID(token);
+                UUID userID = jwtService.extractUserID(token);
 
-                TenantContext.setContext(email, tenantID);
+                TenantContext.setContext(email, tenantID, userID);
 
                 List<GrantedAuthority> authorization = List.of(
                         new SimpleGrantedAuthority(role));

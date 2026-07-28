@@ -20,6 +20,7 @@ import com.klikkas.dto.cashflows.CashflowDetailResponse;
 import com.klikkas.dto.cashflows.CashflowListResponse;
 import com.klikkas.dto.cashflows.LabaRugiAccountItem;
 import com.klikkas.dto.cashflows.LabaRugiResponse;
+import com.klikkas.dto.cashflows.SumByCategory;
 import com.klikkas.dto.cashflows.SummarizeResponse;
 import com.klikkas.entity.Order;
 import com.klikkas.repository.JournalDetailRepository;
@@ -155,11 +156,15 @@ public class CashFlowService {
                         LocalDate dateFrom,
                         LocalDate dateTo) {
 
+                UUID tenantID = TenantContext.getTenantId();
+
                 LocalDateTime startDate = dateFrom.atStartOfDay();
                 LocalDateTime endDate = dateTo.atTime(LocalTime.MAX);
 
-                List<LabaRugiAccountItem> pendapatanList = journalDetailRepo.getRevenueAccounts(startDate, endDate);
-                List<LabaRugiAccountItem> bebanList = journalDetailRepo.getExpenseAccounts(startDate, endDate);
+                List<LabaRugiAccountItem> pendapatanList = journalDetailRepo.getRevenueAccounts(tenantID, startDate,
+                                endDate);
+                List<LabaRugiAccountItem> bebanList = journalDetailRepo.getExpenseAccounts(tenantID, startDate,
+                                endDate);
 
                 Long totalPendapatan = pendapatanList.stream()
                                 .mapToLong(LabaRugiAccountItem::amount)
@@ -177,6 +182,17 @@ public class CashFlowService {
                                 bebanList,
                                 totalBeban,
                                 labaBersih);
+        }
+
+        public List<SumByCategory> getSumOrderByCategory(
+                        LocalDate dateFrom,
+                        LocalDate dateTo) {
+                UUID tenantID = TenantContext.getTenantId();
+                LocalDateTime startDate = dateFrom.atStartOfDay();
+                LocalDateTime endDate = dateTo.atTime(LocalTime.MAX);
+
+                List<SumByCategory> data = orderRepo.getSumOrderByCategory(tenantID, startDate, endDate);
+                return data;
         }
 
 }

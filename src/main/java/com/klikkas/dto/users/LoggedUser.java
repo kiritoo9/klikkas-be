@@ -4,6 +4,6 @@ import java.util.UUID;
 
 public record LoggedUser(
         String email,
-        UUID tenantID) {
-
-}
+        UUID tenantID,
+        UUID userID
+) {}
