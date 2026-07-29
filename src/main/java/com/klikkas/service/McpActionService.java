@@ -15,6 +15,11 @@ import com.klikkas.service.mcp_actions.CleaningService;
 import com.klikkas.service.mcp_actions.OrderDetailAction;
 import com.klikkas.service.mcp_actions.OrderListAction;
 import com.klikkas.service.mcp_actions.OrderSummaryByCategoryAction;
+import com.klikkas.service.mcp_actions.CashflowSummaryAction;
+import com.klikkas.service.mcp_actions.LabaRugiAction;
+import com.klikkas.service.mcp_actions.ProductDetailAction;
+import com.klikkas.service.mcp_actions.ProductListAction;
+import com.klikkas.service.mcp_actions.TopCategoryAction;
 
 import lombok.RequiredArgsConstructor;
 
@@ -26,6 +31,11 @@ public class McpActionService {
     private final OrderListAction orderListAction;
     private final OrderDetailAction orderDetailAction;
     private final OrderSummaryByCategoryAction orderSummaryByCategoryAction;
+    private final ProductListAction productListAction;
+    private final ProductDetailAction productDetailAction;
+    private final CashflowSummaryAction cashflowSummaryAction;
+    private final LabaRugiAction labaRugiAction;
+    private final TopCategoryAction topCategoryAction;
     private final CleaningService cleaningService;
 
     public McpActionResponse execute(String intent, Map<String, IntentParamValue> params,
@@ -38,11 +48,11 @@ public class McpActionService {
                 case "order_list"                -> orderListAction.execute(params);
                 case "order_detail"              -> orderDetailAction.execute(params);
                 case "order_summary_by_category" -> orderSummaryByCategoryAction.execute(params);
-                case "product_list"              -> placeholder("product_list — params: " + params);
-                case "product_detail"            -> placeholder("product_detail — params: " + params);
-                case "cashflow_summary"          -> placeholder("cashflow_summary — params: " + params);
-                case "laba_rugi"                 -> placeholder("laba_rugi — params: " + params);
-                case "top_category"              -> placeholder("top_category — params: " + params);
+                case "product_list"              -> productListAction.execute(params);
+                case "product_detail"            -> productDetailAction.execute(params);
+                case "cashflow_summary"          -> cashflowSummaryAction.execute(params);
+                case "laba_rugi"                 -> labaRugiAction.execute(params);
+                case "top_category"              -> topCategoryAction.execute(params);
                 case "business_advice"           -> placeholder("business_advice — params: " + params);
                 case "journal_report"            -> placeholder("journal_report — params: " + params);
                 case "finance_health"            -> placeholder("finance_health — params: " + params);
