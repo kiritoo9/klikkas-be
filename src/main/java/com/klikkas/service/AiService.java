@@ -10,6 +10,9 @@ import org.springframework.stereotype.Service;
 
 import com.klikkas.dto.ai.FinanceHealth;
 import com.klikkas.dto.ai.OpenAiResponse;
+import com.klikkas.dto.ai.GenReportRequest;
+import com.klikkas.dto.ai.GenReportResponse;
+import com.klikkas.dto.ai.McpResponse;
 import com.klikkas.dto.cashflows.LabaRugiResponse;
 import com.klikkas.dto.cashflows.SumByCategory;
 import com.klikkas.entity.UserToken;
@@ -24,6 +27,7 @@ import tools.jackson.databind.ObjectMapper;
 public class AiService {
 
     private final UserTokenRepository userTokenRepository;
+    private final McpService mcpService;
 
     private final CashFlowService cashFlowService;
     private final OpenAiService openAiService;
@@ -114,4 +118,23 @@ public class AiService {
         );
     }
     
+    public GenReportResponse generativeReport(GenReportRequest req) {
+        UUID userID = TenantContext.getUserId();
+        UUID tenantID = TenantContext.getTenantId();
+
+        McpResponse response = mcpService.run(
+            userID,
+            tenantID,
+            req.content()
+        );
+
+        return new GenReportResponse(
+            true,
+            "Success",
+            response.ai_response(),
+            response.process_detail(),
+            response.params(),
+            response.data()
+        );
+    }
 }

@@ -1,0 +1,123 @@
+[
+  {
+    "intentCode": "order_list",
+    "description": "List and filter orders (pesanan)",
+    "descriptionId": "Daftar dan filter pesanan",
+    "params": [
+      { "name": "date_from", "type": "date", "operators": ["equal", "range_date", "gte", "lte"] },
+      { "name": "date_to", "type": "date", "operators": ["equal", "range_date", "gte", "lte"] },
+      { "name": "order_type", "type": "enum", "operators": ["equal"], "allowedValues": ["kas_masuk", "kas_keluar"] },
+      { "name": "status", "type": "enum", "operators": ["equal"], "allowedValues": ["pending", "paid", "canceled"] },
+      { "name": "category_name", "type": "string", "operators": ["equal", "contains"] },
+      { "name": "keywords", "type": "string", "operators": ["contains"] }
+    ]
+  },
+  {
+    "intentCode": "order_detail",
+    "description": "Get single order details (detail pesanan)",
+    "descriptionId": "Detail satu pesanan",
+    "params": [
+      { "name": "order_id", "type": "string", "operators": ["equal"] },
+      { "name": "no_order", "type": "string", "operators": ["equal"] }
+    ]
+  },
+  {
+    "intentCode": "order_summary_by_category",
+    "description": "Orders grouped by category (ringkasan pesanan per kategori)",
+    "descriptionId": "Ringkasan pesanan dikelompokkan per kategori",
+    "params": [
+      { "name": "date_from", "type": "date", "operators": ["equal", "range_date", "gte", "lte"] },
+      { "name": "date_to", "type": "date", "operators": ["equal", "range_date", "gte", "lte"] },
+      { "name": "order_type", "type": "enum", "operators": ["equal"], "allowedValues": ["kas_masuk", "kas_keluar"] }
+    ]
+  },
+  {
+    "intentCode": "product_list",
+    "description": "List and filter products (produk)",
+    "descriptionId": "Daftar dan filter produk",
+    "params": [
+      { "name": "product_name", "type": "string", "operators": ["equal", "contains"] },
+      { "name": "sku", "type": "string", "operators": ["equal", "contains"] },
+      { "name": "category_name", "type": "string", "operators": ["equal", "contains"] },
+      { "name": "is_active", "type": "boolean", "operators": ["equal"], "allowedValues": ["true", "false"] }
+    ]
+  },
+  {
+    "intentCode": "product_detail",
+    "description": "Get single product details (detail produk)",
+    "descriptionId": "Detail satu produk",
+    "params": [
+      { "name": "product_id", "type": "string", "operators": ["equal"] },
+      { "name": "sku", "type": "string", "operators": ["equal"] }
+    ]
+  },
+  {
+    "intentCode": "cashflow_summary",
+    "description": "Cashflow summary — kas masuk & keluar (ringkasan arus kas)",
+    "descriptionId": "Ringkasan arus kas (kas masuk dan kas keluar)",
+    "params": [
+      { "name": "date_from", "type": "date", "operators": ["equal", "range_date", "gte", "lte"] },
+      { "name": "date_to", "type": "date", "operators": ["equal", "range_date", "gte", "lte"] }
+    ]
+  },
+  {
+    "intentCode": "laba_rugi",
+    "description": "Profit & loss — keuntungan bersih, laba rugi, pendapatan vs beban",
+    "descriptionId": "Laporan laba rugi, keuntungan bersih, pendapatan dan beban",
+    "params": [
+      { "name": "date_from", "type": "date", "operators": ["equal", "range_date", "gte", "lte"] },
+      { "name": "date_to", "type": "date", "operators": ["equal", "range_date", "gte", "lte"] }
+    ]
+  },
+  {
+    "intentCode": "top_category",
+    "description": "Top spending or income categories — pengeluaran/pemasukan terbesar",
+    "descriptionId": "Kategori pengeluaran terbesar atau pemasukan terbesar",
+    "params": [
+      { "name": "date_from", "type": "date", "operators": ["equal", "range_date", "gte", "lte"] },
+      { "name": "date_to", "type": "date", "operators": ["equal", "range_date", "gte", "lte"] },
+      { "name": "order_type", "type": "enum", "operators": ["equal"], "allowedValues": ["kas_masuk", "kas_keluar"] },
+      { "name": "limit", "type": "number", "operators": ["equal"] }
+    ]
+  },
+  {
+    "intentCode": "business_advice",
+    "description": "Business advice, saran, rekomendasi, strategi, ekspansi, atau pertanyaan tentang langkah bisnis",
+    "descriptionId": "Saran bisnis, rekomendasi strategi ekspansi, pertanyaan langkah usaha, tips bisnis",
+    "params": [
+      { "name": "topic", "type": "string", "operators": ["equal", "contains"] }
+    ]
+  },
+  {
+    "intentCode": "journal_report",
+    "description": "Journal entries by account (jurnal per akun)",
+    "descriptionId": "Laporan jurnal berdasarkan akun",
+    "params": [
+      { "name": "date_from", "type": "date", "operators": ["equal", "range_date", "gte", "lte"] },
+      { "name": "date_to", "type": "date", "operators": ["equal", "range_date", "gte", "lte"] },
+      { "name": "account_code", "type": "string", "operators": ["equal", "contains"] },
+      { "name": "account_name", "type": "string", "operators": ["equal", "contains"] }
+    ]
+  },
+  {
+    "intentCode": "finance_health",
+    "description": "Overall financial health check (cek kesehatan keuangan)",
+    "descriptionId": "Cek kesehatan keuangan bisnis secara keseluruhan",
+    "params": [
+      { "name": "date_from", "type": "date", "operators": ["equal", "range_date", "gte", "lte"] },
+      { "name": "date_to", "type": "date", "operators": ["equal", "range_date", "gte", "lte"] }
+    ]
+  },
+  {
+    "intentCode": "unknown",
+    "description": "Fallback when no intent matches",
+    "descriptionId": "Tidak dapat mengidentifikasi maksud pengguna",
+    "params": []
+  },
+  {
+    "intentCode": "chitchat",
+    "description": "General conversation, greetings, and casual chat",
+    "descriptionId": "Percakapan umum, sapaan, dan obrolan santai",
+    "params": []
+  }
+]
